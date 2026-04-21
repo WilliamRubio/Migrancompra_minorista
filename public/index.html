@@ -1,0 +1,2004 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Mi Gran Compra - Tu supermercado de confianza</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --green:  #00b04f;
+      --green2: #007a36;
+      --orange: #ff6b00;
+      --yellow: #ffc200;
+      --red:    #e8002d;
+      --bg:     #f4f6f0;
+      --dark:   #1a2e1a;
+      --white:  #ffffff;
+      --gray:   #6b7280;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: var(--bg);
+      color: var(--dark);
+      overflow-x: hidden;
+    }
+
+    /* ── NAVBAR ── */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 999;
+      background: var(--white);
+      box-shadow: 0 2px 16px rgba(0,0,0,.10);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 32px;
+      height: 68px;
+    }
+
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+    }
+
+    .nav-logo .badge {
+      background: linear-gradient(135deg, var(--green), var(--green2));
+      color: #fff;
+      font-weight: 900;
+      font-size: 1.3rem;
+      width: 46px;
+      height: 46px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 14px rgba(0,176,79,.35);
+    }
+
+    .nav-logo span {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--dark);
+      line-height: 1.1;
+    }
+
+    .nav-logo small {
+      display: block;
+      font-size: 0.65rem;
+      color: var(--green);
+      font-weight: 600;
+      letter-spacing: .5px;
+      text-transform: uppercase;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 6px;
+      list-style: none;
+    }
+
+    .nav-links a {
+      text-decoration: none;
+      color: var(--dark);
+      font-size: .88rem;
+      font-weight: 500;
+      padding: 8px 14px;
+      border-radius: 8px;
+      transition: background .2s, color .2s;
+    }
+
+    .nav-links a:hover { background: #f0faf4; color: var(--green); }
+
+    .nav-cta {
+      background: var(--green);
+      color: #fff !important;
+      border-radius: 24px !important;
+      padding: 8px 22px !important;
+      font-weight: 600 !important;
+      box-shadow: 0 3px 12px rgba(0,176,79,.35);
+      transition: background .2s, transform .15s !important;
+    }
+
+    .nav-cta:hover { background: var(--green2) !important; transform: translateY(-1px); }
+
+    /* ── HERO ── */
+    .hero {
+      position: relative;
+      min-height: 560px;
+      background: linear-gradient(135deg, #003d1a 0%, #006b2e 45%, #00a845 100%);
+      display: flex;
+      align-items: center;
+      overflow: hidden;
+      padding: 60px 40px;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      width: 700px;
+      height: 700px;
+      border-radius: 50%;
+      background: rgba(255,255,255,.04);
+      top: -200px;
+      right: -200px;
+    }
+
+    .hero::after {
+      content: '';
+      position: absolute;
+      width: 400px;
+      height: 400px;
+      border-radius: 50%;
+      background: rgba(255,198,0,.08);
+      bottom: -150px;
+      left: -100px;
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      max-width: 600px;
+    }
+
+    .hero-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255,255,255,.12);
+      backdrop-filter: blur(6px);
+      color: #fff;
+      font-size: .8rem;
+      font-weight: 600;
+      letter-spacing: .5px;
+      text-transform: uppercase;
+      padding: 6px 16px;
+      border-radius: 20px;
+      margin-bottom: 24px;
+      border: 1px solid rgba(255,255,255,.2);
+    }
+
+    .hero h1 {
+      font-size: clamp(2.2rem, 5vw, 3.6rem);
+      font-weight: 900;
+      color: #fff;
+      line-height: 1.1;
+      margin-bottom: 20px;
+    }
+
+    .hero h1 em {
+      font-style: normal;
+      color: var(--yellow);
+    }
+
+    .hero p {
+      font-size: 1.05rem;
+      color: rgba(255,255,255,.82);
+      line-height: 1.65;
+      margin-bottom: 36px;
+      max-width: 460px;
+    }
+
+    .hero-btns {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .btn-primary {
+      background: var(--orange);
+      color: #fff;
+      padding: 14px 32px;
+      border-radius: 32px;
+      font-weight: 700;
+      font-size: .95rem;
+      text-decoration: none;
+      box-shadow: 0 6px 22px rgba(255,107,0,.4);
+      transition: transform .2s, box-shadow .2s;
+    }
+
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(255,107,0,.5); }
+
+    .btn-outline {
+      background: transparent;
+      color: #fff;
+      padding: 14px 32px;
+      border-radius: 32px;
+      font-weight: 600;
+      font-size: .95rem;
+      text-decoration: none;
+      border: 2px solid rgba(255,255,255,.4);
+      transition: background .2s, border-color .2s;
+    }
+
+    .btn-outline:hover { background: rgba(255,255,255,.1); border-color: rgba(255,255,255,.7); }
+
+    .hero-images {
+      position: absolute;
+      right: 0;
+      bottom: 0;
+      top: 0;
+      width: 52%;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 6px;
+      padding: 6px;
+      mask-image: linear-gradient(to left, rgba(0,0,0,1) 60%, rgba(0,0,0,0) 100%);
+    }
+
+    .hero-images .col {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .hero-images .col:nth-child(2) { margin-top: 28px; }
+    .hero-images .col:nth-child(3) { margin-top: 14px; }
+
+    .hero-img {
+      border-radius: 14px;
+      overflow: hidden;
+      flex: 1;
+    }
+
+    .hero-img img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    /* ── STATS BAR ── */
+    .stats-bar {
+      background: var(--white);
+      display: flex;
+      justify-content: center;
+      gap: 0;
+      box-shadow: 0 2px 10px rgba(0,0,0,.07);
+    }
+
+    .stat-item {
+      flex: 1;
+      max-width: 260px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 22px 28px;
+      border-right: 1px solid #e8ede8;
+    }
+
+    .stat-item:last-child { border-right: none; }
+
+    .stat-icon {
+      font-size: 2rem;
+      width: 54px;
+      height: 54px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 14px;
+      background: #f0faf4;
+      flex-shrink: 0;
+    }
+
+    .stat-info strong {
+      display: block;
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--green);
+    }
+
+    .stat-info span {
+      font-size: .8rem;
+      color: var(--gray);
+      font-weight: 500;
+    }
+
+    /* ── SECTION WRAPPER ── */
+    section {
+      padding: 72px 40px;
+      max-width: 1280px;
+      margin: 0 auto;
+    }
+
+    .section-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #f0faf4;
+      color: var(--green);
+      font-size: .75rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: 1px solid #c8ebd4;
+      margin-bottom: 14px;
+    }
+
+    .section-title {
+      font-size: clamp(1.7rem, 3.5vw, 2.4rem);
+      font-weight: 800;
+      color: var(--dark);
+      line-height: 1.2;
+      margin-bottom: 8px;
+    }
+
+    .section-sub {
+      font-size: 1rem;
+      color: var(--gray);
+      margin-bottom: 40px;
+    }
+
+    /* ── CATEGORIES ── */
+    .cat-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 28px;
+      flex-wrap: wrap;
+    }
+
+    .cat-tab {
+      padding: 10px 24px;
+      border-radius: 32px;
+      font-size: .9rem;
+      font-weight: 700;
+      cursor: pointer;
+      border: 2px solid transparent;
+      background: var(--white);
+      color: var(--gray);
+      box-shadow: 0 2px 8px rgba(0,0,0,.07);
+      transition: all .2s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .cat-tab:hover { border-color: var(--green); color: var(--green); }
+    .cat-tab.active { background: var(--green); color: #fff; border-color: var(--green); box-shadow: 0 4px 16px rgba(0,176,79,.3); }
+    .cat-tab .tab-count { background: rgba(255,255,255,.25); border-radius: 20px; padding: 1px 8px; font-size: .75rem; }
+    .cat-tab:not(.active) .tab-count { background: var(--bg); color: var(--gray); }
+
+    .cat-panel { display: none; }
+    .cat-panel.active { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 20px; }
+
+    .cat-card {
+      background: var(--white);
+      border-radius: 20px;
+      overflow: hidden;
+      text-decoration: none;
+      color: var(--dark);
+      box-shadow: 0 2px 12px rgba(0,0,0,.07);
+      transition: transform .25s, box-shadow .25s;
+      cursor: pointer;
+      position: relative;
+      display: block;
+    }
+
+    .cat-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 12px 32px rgba(0,0,0,.13);
+    }
+
+    .cat-img {
+      width: 100%;
+      height: 148px;
+      object-fit: cover;
+      display: block;
+    }
+
+    .cat-badge {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: rgba(0,0,0,.55);
+      color: #fff;
+      font-size: .68rem;
+      font-weight: 700;
+      padding: 3px 9px;
+      border-radius: 20px;
+      backdrop-filter: blur(4px);
+    }
+
+    .cat-body {
+      padding: 14px 16px 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .cat-emoji {
+      font-size: 1.5rem;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 11px;
+      background: var(--bg);
+      flex-shrink: 0;
+    }
+
+    .cat-info strong {
+      display: block;
+      font-size: .88rem;
+      font-weight: 700;
+    }
+
+    .cat-info span {
+      font-size: .73rem;
+      color: var(--gray);
+      line-height: 1.4;
+    }
+
+    /* ── PROMO BANNER ── */
+    .promo-wrapper {
+      background: linear-gradient(135deg, #ff6b00 0%, #e8002d 100%);
+      border-radius: 28px;
+      padding: 52px 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 40px;
+      margin: 0 40px 72px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .promo-wrapper::before {
+      content: '';
+      position: absolute;
+      width: 500px;
+      height: 500px;
+      border-radius: 50%;
+      background: rgba(255,255,255,.06);
+      top: -200px;
+      right: -100px;
+    }
+
+    .promo-text h2 {
+      font-size: clamp(1.6rem, 3vw, 2.4rem);
+      font-weight: 900;
+      color: #fff;
+      margin-bottom: 12px;
+    }
+
+    .promo-text p {
+      color: rgba(255,255,255,.85);
+      font-size: .98rem;
+      max-width: 400px;
+      line-height: 1.6;
+    }
+
+    .promo-percent {
+      font-size: clamp(4rem, 8vw, 7rem);
+      font-weight: 900;
+      color: rgba(255,255,255,.18);
+      line-height: 1;
+      flex-shrink: 0;
+      user-select: none;
+    }
+
+    /* ── PRODUCTS CAROUSEL ── */
+    .products-scroll {
+      display: flex;
+      gap: 20px;
+      overflow-x: auto;
+      padding-bottom: 12px;
+      scrollbar-width: none;
+    }
+
+    .products-scroll::-webkit-scrollbar { display: none; }
+
+    .product-card {
+      background: var(--white);
+      border-radius: 20px;
+      padding: 18px;
+      min-width: 220px;
+      max-width: 220px;
+      box-shadow: 0 2px 14px rgba(0,0,0,.07);
+      transition: transform .25s, box-shadow .25s;
+      flex-shrink: 0;
+      cursor: pointer;
+    }
+
+    .product-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 28px rgba(0,0,0,.12);
+    }
+
+    .product-img-wrap {
+      width: 100%;
+      height: 150px;
+      border-radius: 14px;
+      overflow: hidden;
+      margin-bottom: 14px;
+      background: var(--bg);
+    }
+
+    .product-img-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .product-badge {
+      display: inline-block;
+      font-size: .68rem;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 10px;
+      margin-bottom: 8px;
+    }
+    .product-badge.alm { background: #fff0e6; color: var(--orange); }
+    .product-badge.tec { background: #e8f0ff; color: #3b6ef0; }
+    .product-badge.dep { background: #fff8e0; color: #b07000; }
+
+    /* ── PRODUCTS TABS ── */
+    .prod-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+
+    .prod-tab {
+      padding: 8px 20px;
+      border-radius: 32px;
+      font-size: .85rem;
+      font-weight: 700;
+      cursor: pointer;
+      border: 2px solid transparent;
+      background: var(--white);
+      color: var(--gray);
+      box-shadow: 0 2px 8px rgba(0,0,0,.07);
+      transition: all .2s;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .prod-tab:hover { border-color: var(--green); color: var(--green); }
+    .prod-tab.active { background: var(--dark); color: #fff; border-color: var(--dark); }
+    .prod-tab.active.alm { background: var(--orange); border-color: var(--orange); box-shadow: 0 4px 16px rgba(255,107,0,.3); }
+    .prod-tab.active.tec { background: #3b6ef0; border-color: #3b6ef0; box-shadow: 0 4px 16px rgba(59,110,240,.3); }
+    .prod-tab.active.dep { background: #b07000; border-color: #b07000; box-shadow: 0 4px 16px rgba(176,112,0,.3); }
+
+    .product-name {
+      font-size: .88rem;
+      font-weight: 600;
+      color: var(--dark);
+      line-height: 1.35;
+      margin-bottom: 10px;
+      min-height: 36px;
+    }
+
+    .product-price {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: var(--green);
+    }
+
+    .product-price small {
+      font-size: .75rem;
+      color: var(--gray);
+      font-weight: 400;
+    }
+
+    .product-add {
+      margin-top: 12px;
+      width: 100%;
+      padding: 9px;
+      background: var(--green);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: .85rem;
+      cursor: pointer;
+      transition: background .2s;
+    }
+
+    .product-add:hover { background: var(--green2); }
+
+    /* ── SUCURSALES ── */
+    .sucursales-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 20px;
+    }
+
+    .suc-card {
+      background: var(--white);
+      border-radius: 20px;
+      padding: 26px;
+      box-shadow: 0 2px 12px rgba(0,0,0,.07);
+      border-left: 5px solid var(--green);
+      transition: transform .22s, box-shadow .22s;
+    }
+
+    .suc-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 10px 28px rgba(0,0,0,.12);
+    }
+
+    .suc-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+
+    .suc-header h3 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--dark);
+    }
+
+    .suc-tipo {
+      background: #f0faf4;
+      color: var(--green);
+      font-size: .7rem;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 20px;
+      border: 1px solid #c8ebd4;
+    }
+
+    .suc-info {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .suc-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: .85rem;
+      color: var(--gray);
+    }
+
+    .suc-row strong { color: var(--dark); font-weight: 600; }
+
+    /* ── FOOTER ── */
+    footer {
+      background: var(--dark);
+      color: rgba(255,255,255,.7);
+      padding: 56px 40px 28px;
+    }
+
+    .footer-top {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1.5fr;
+      gap: 40px;
+      max-width: 1280px;
+      margin: 0 auto 40px;
+    }
+
+    .footer-brand strong {
+      display: block;
+      font-size: 1.3rem;
+      font-weight: 800;
+      color: #fff;
+      margin-bottom: 10px;
+    }
+
+    .footer-brand p {
+      font-size: .85rem;
+      line-height: 1.7;
+    }
+
+    .footer-col h4 {
+      color: #fff;
+      font-size: .9rem;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+
+    .footer-col ul {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+    }
+
+    .footer-col ul li a {
+      color: rgba(255,255,255,.6);
+      text-decoration: none;
+      font-size: .85rem;
+      transition: color .2s;
+    }
+
+    .footer-col ul li a:hover { color: #fff; }
+
+    .footer-hotline {
+      background: rgba(255,255,255,.06);
+      border-radius: 14px;
+      padding: 18px 20px;
+    }
+
+    .footer-hotline span {
+      display: block;
+      font-size: .75rem;
+      margin-bottom: 6px;
+    }
+
+    .footer-hotline strong {
+      display: block;
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: var(--yellow);
+    }
+
+    .footer-bottom {
+      border-top: 1px solid rgba(255,255,255,.08);
+      max-width: 1280px;
+      margin: 0 auto;
+      padding-top: 22px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: .8rem;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    /* ── ANIMATIONS ── */
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .fade-in-up {
+      opacity: 0;
+      animation: fadeInUp .6s ease forwards;
+    }
+
+    .delay-1 { animation-delay: .15s; }
+    .delay-2 { animation-delay: .3s; }
+    .delay-3 { animation-delay: .45s; }
+    .delay-4 { animation-delay: .6s; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 900px) {
+      .hero-images { display: none; }
+      .hero { min-height: auto; }
+      .promo-wrapper { flex-direction: column; padding: 32px 28px; margin: 0 20px 48px; }
+      .promo-percent { display: none; }
+      .footer-top { grid-template-columns: 1fr 1fr; }
+      nav { padding: 0 20px; }
+      .nav-links { display: none; }
+      section { padding: 48px 20px; }
+    }
+
+    @media (max-width: 600px) {
+      .hero { padding: 48px 20px; }
+      .stats-bar { flex-wrap: wrap; }
+      .stat-item { border-right: none; border-bottom: 1px solid #e8ede8; }
+      .footer-top { grid-template-columns: 1fr; }
+    }
+
+    /* ── NAVBAR ACTIONS ── */
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    .nav-user-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--bg);
+      border: 2px solid #e2e8e2;
+      border-radius: 32px;
+      padding: 7px 16px;
+      font-size: .82rem;
+      font-weight: 600;
+      color: var(--dark);
+      cursor: pointer;
+      transition: all .2s;
+      font-family: inherit;
+    }
+    .nav-user-btn:hover { border-color: var(--green); color: var(--green); }
+    .nav-user-btn.logged { background: var(--green); color: #fff; border-color: var(--green); }
+
+    .nav-cart-btn {
+      position: relative;
+      background: var(--dark);
+      color: #fff;
+      border: none;
+      border-radius: 50%;
+      width: 44px;
+      height: 44px;
+      font-size: 1.1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background .2s;
+    }
+    .nav-cart-btn:hover { background: var(--green); }
+
+    .cart-badge {
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      background: var(--red);
+      color: #fff;
+      font-size: .6rem;
+      font-weight: 800;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* ── OVERLAY ── */
+    .mgc-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.50);
+      z-index: 1100;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+    .mgc-overlay.show { display: flex; }
+
+    /* ── MODAL AUTH ── */
+    .auth-modal {
+      background: var(--white);
+      border-radius: 24px;
+      width: min(440px, 95vw);
+      padding: 36px 32px 32px;
+      position: relative;
+      box-shadow: 0 24px 80px rgba(0,0,0,.2);
+    }
+    .auth-modal .close-btn {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: none;
+      border: none;
+      font-size: 1.3rem;
+      cursor: pointer;
+      color: var(--gray);
+      line-height: 1;
+    }
+    .auth-tabs {
+      display: flex;
+      gap: 0;
+      border-bottom: 2px solid #e8ede8;
+      margin-bottom: 26px;
+    }
+    .auth-tab {
+      flex: 1;
+      padding: 10px;
+      background: none;
+      border: none;
+      font-family: inherit;
+      font-size: .9rem;
+      font-weight: 600;
+      color: var(--gray);
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      margin-bottom: -2px;
+      transition: all .2s;
+    }
+    .auth-tab.active { color: var(--green); border-bottom-color: var(--green); }
+    .auth-form { display: none; flex-direction: column; gap: 14px; }
+    .auth-form.active { display: flex; }
+    .auth-form label { font-size: .8rem; font-weight: 600; color: var(--dark); }
+    .auth-form input {
+      width: 100%;
+      padding: 11px 14px;
+      border: 2px solid #e2e8e2;
+      border-radius: 12px;
+      font-family: inherit;
+      font-size: .9rem;
+      transition: border-color .2s;
+      outline: none;
+    }
+    .auth-form input:focus { border-color: var(--green); }
+    .auth-submit {
+      width: 100%;
+      padding: 13px;
+      background: var(--green);
+      color: #fff;
+      border: none;
+      border-radius: 14px;
+      font-family: inherit;
+      font-size: .95rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background .2s;
+      margin-top: 4px;
+    }
+    .auth-submit:hover { background: var(--green2); }
+    .auth-error {
+      color: var(--red);
+      font-size: .8rem;
+      text-align: center;
+      min-height: 18px;
+    }
+    .auth-demo-hint {
+      font-size: .75rem;
+      color: var(--gray);
+      text-align: center;
+      background: var(--bg);
+      padding: 8px 12px;
+      border-radius: 10px;
+    }
+
+    /* ── CARRITO SIDEBAR ── */
+    .cart-sidebar {
+      position: fixed;
+      top: 0;
+      right: -480px;
+      width: min(460px, 100vw);
+      height: 100dvh;
+      background: var(--white);
+      z-index: 1200;
+      display: flex;
+      flex-direction: column;
+      box-shadow: -8px 0 40px rgba(0,0,0,.15);
+      transition: right .3s cubic-bezier(.4,0,.2,1);
+    }
+    .cart-sidebar.open { right: 0; }
+
+    .cart-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 24px;
+      border-bottom: 1px solid #e8ede8;
+    }
+    .cart-header h3 { font-size: 1.1rem; font-weight: 700; }
+    .cart-close {
+      background: none;
+      border: none;
+      font-size: 1.4rem;
+      cursor: pointer;
+      color: var(--gray);
+    }
+
+    .cart-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 24px;
+    }
+    .cart-empty {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      gap: 12px;
+      color: var(--gray);
+    }
+    .cart-empty .cart-empty-icon { font-size: 3rem; }
+
+    .cart-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 0;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .cart-item-img {
+      width: 64px;
+      height: 64px;
+      border-radius: 12px;
+      object-fit: cover;
+      background: var(--bg);
+      flex-shrink: 0;
+    }
+    .cart-item-info { flex: 1; min-width: 0; }
+    .cart-item-name { font-size: .85rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .cart-item-cat  { font-size: .72rem; color: var(--gray); }
+    .cart-item-price { font-size: .88rem; font-weight: 700; color: var(--green); margin-top: 4px; }
+
+    .cart-qty {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+    .qty-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      border: 1.5px solid #dde8dd;
+      background: var(--bg);
+      cursor: pointer;
+      font-size: .9rem;
+      font-weight: 700;
+      transition: all .15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .qty-btn:hover { background: var(--green); color: #fff; border-color: var(--green); }
+    .qty-val { font-size: .9rem; font-weight: 700; min-width: 20px; text-align: center; }
+    .cart-del { background: none; border: none; font-size: 1rem; color: #ccc; cursor: pointer; margin-left: 4px; }
+    .cart-del:hover { color: var(--red); }
+
+    .cart-footer {
+      padding: 20px 24px;
+      border-top: 1px solid #e8ede8;
+    }
+    .cart-total-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 16px;
+    }
+    .cart-total-label { font-size: .9rem; color: var(--gray); }
+    .cart-total-val   { font-size: 1.4rem; font-weight: 800; color: var(--dark); }
+    .cart-checkout-btn {
+      width: 100%;
+      padding: 14px;
+      background: var(--green);
+      color: #fff;
+      border: none;
+      border-radius: 14px;
+      font-family: inherit;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background .2s;
+    }
+    .cart-checkout-btn:hover { background: var(--green2); }
+
+    /* ── CHECKOUT MODAL ── */
+    .checkout-modal {
+      background: var(--white);
+      border-radius: 24px;
+      width: min(480px, 95vw);
+      padding: 36px 32px 28px;
+      position: relative;
+      box-shadow: 0 24px 80px rgba(0,0,0,.2);
+      max-height: 90dvh;
+      overflow-y: auto;
+    }
+    .checkout-modal h3 { font-size: 1.2rem; font-weight: 700; margin-bottom: 20px; }
+    .checkout-modal .close-btn {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: none;
+      border: none;
+      font-size: 1.3rem;
+      cursor: pointer;
+      color: var(--gray);
+    }
+    .checkout-section { margin-bottom: 20px; }
+    .checkout-section h4 { font-size: .85rem; font-weight: 700; color: var(--gray); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 12px; }
+    .checkout-input {
+      width: 100%;
+      padding: 11px 14px;
+      border: 2px solid #e2e8e2;
+      border-radius: 12px;
+      font-family: inherit;
+      font-size: .9rem;
+      outline: none;
+      transition: border-color .2s;
+    }
+    .checkout-input:focus { border-color: var(--green); }
+    .pay-methods { display: flex; gap: 10px; margin-top: 8px; }
+    .pay-method {
+      flex: 1;
+      padding: 12px;
+      border: 2px solid #e2e8e2;
+      border-radius: 12px;
+      text-align: center;
+      cursor: pointer;
+      font-size: .8rem;
+      font-weight: 600;
+      transition: all .2s;
+      background: none;
+      font-family: inherit;
+    }
+    .pay-method.selected { border-color: var(--green); background: #f0faf4; color: var(--green); }
+    .pay-method-icon { font-size: 1.4rem; display: block; margin-bottom: 4px; }
+
+    .checkout-resumen { background: var(--bg); border-radius: 14px; padding: 14px 16px; }
+    .checkout-item-row { display: flex; justify-content: space-between; font-size: .82rem; margin-bottom: 6px; }
+    .checkout-divider { border: none; border-top: 1px solid #dde8dd; margin: 10px 0; }
+    .checkout-total-row { display: flex; justify-content: space-between; font-weight: 700; font-size: .95rem; }
+    .checkout-confirm-btn {
+      width: 100%;
+      padding: 14px;
+      background: var(--green);
+      color: #fff;
+      border: none;
+      border-radius: 14px;
+      font-family: inherit;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background .2s;
+      margin-top: 20px;
+    }
+    .checkout-confirm-btn:hover { background: var(--green2); }
+    .checkout-error { color: var(--red); font-size: .8rem; text-align: center; margin-top: 8px; min-height: 16px; }
+
+    /* ── TOAST ── */
+    #mgcToast {
+      position: fixed;
+      bottom: 28px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--dark);
+      color: #fff;
+      padding: 12px 24px;
+      border-radius: 32px;
+      font-size: .88rem;
+      font-weight: 600;
+      z-index: 2000;
+      transition: transform .3s cubic-bezier(.4,0,.2,1);
+      pointer-events: none;
+      white-space: nowrap;
+    }
+    #mgcToast.show { transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+
+  <!-- ── NAVBAR ── -->
+  <nav>
+    <a href="#" class="nav-logo">
+      <div class="badge">MG</div>
+      <div>
+        <span>Mi Gran Compra</span>
+        <small>Tu supermercado de confianza</small>
+      </div>
+    </a>
+    <ul class="nav-links">
+      <li><a href="#categorias">Categorías</a></li>
+      <li><a href="#ofertas">Ofertas</a></li>
+      <li><a href="#sucursales">Sucursales</a></li>
+      <li><a href="#sucursales" class="nav-cta">📍 Encuéntranos</a></li>
+      <li><a href="/panel.html" style="background:#1e2235;color:#a78bfa;border:1px solid #2d3148;border-radius:8px;padding:8px 14px;font-size:.85rem;font-weight:600;text-decoration:none;transition:background .2s" onmouseover="this.style.background='#2d2f5e'" onmouseout="this.style.background='#1e2235'">⚙️ Panel Admin</a></li>
+    </ul>
+    <div class="nav-actions">
+      <!-- Botón usuario -->
+      <button class="nav-user-btn" id="navUserBtn" onclick="onNavUserClick()">
+        <span class="nav-user-icon">👤</span>
+        <span id="navUserLabel">Ingresar</span>
+      </button>
+      <!-- Botón carrito -->
+      <button class="nav-cart-btn" onclick="abrirCarrito()">
+        🛒
+        <span class="cart-badge" id="cartBadge" style="display:none">0</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- ── HERO ── -->
+  <div class="hero">
+    <div class="hero-content">
+      <div class="hero-tag fade-in-up">🛒 Más de 200 productos disponibles</div>
+      <h1 class="fade-in-up delay-1">Todo lo que <em>necesitas</em>, en un solo lugar</h1>
+      <p class="fade-in-up delay-2">
+        En <strong style="color:#fff">Mi Gran Compra</strong> encontrarás alimentos frescos, bebidas,
+        productos de higiene y mucho más con la mejor calidad al precio justo.
+      </p>
+      <div class="hero-btns fade-in-up delay-3">
+        <a href="#categorias" class="btn-primary">Ver productos</a>
+        <a href="#sucursales" class="btn-outline">Nuestras sucursales</a>
+      </div>
+    </div>
+    <div class="hero-images">
+      <div class="col">
+        <div class="hero-img"><img src="https://images.unsplash.com/photo-1542838132-92c53300491e?w=300&h=220&fit=crop" alt="frutas" /></div>
+        <div class="hero-img"><img src="https://images.unsplash.com/photo-1598965402089-897ce52e8355?w=300&h=180&fit=crop" alt="lacteos" /></div>
+      </div>
+      <div class="col">
+        <div class="hero-img"><img src="https://images.unsplash.com/photo-1608198093002-ad4e005484ec?w=300&h=180&fit=crop" alt="panaderia" /></div>
+        <div class="hero-img"><img src="https://images.unsplash.com/photo-1568702846914-96b305d2aaeb?w=300&h=200&fit=crop" alt="carnes" /></div>
+      </div>
+      <div class="col">
+        <div class="hero-img"><img src="https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=300&h=200&fit=crop" alt="bebidas" /></div>
+        <div class="hero-img"><img src="https://images.unsplash.com/photo-1585842378054-ee2e52f94ba2?w=300&h=180&fit=crop" alt="snacks" /></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── STATS BAR ── -->
+  <div class="stats-bar">
+    <div class="stat-item">
+      <div class="stat-icon">🏪</div>
+      <div class="stat-info">
+        <strong>5</strong>
+        <span>Sucursales en Colombia</span>
+      </div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-icon">📦</div>
+      <div class="stat-info">
+        <strong>200+</strong>
+        <span>Productos disponibles</span>
+      </div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-icon">🚚</div>
+      <div class="stat-info">
+        <strong>Express</strong>
+        <span>Entrega mismo día</span>
+      </div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-icon">⭐</div>
+      <div class="stat-info">
+        <strong>4.9 / 5</strong>
+        <span>Calificación de clientes</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── CATEGORÍAS ── -->
+  <section id="categorias">
+    <div class="section-label">🏷️ Explora</div>
+    <h2 class="section-title">Nuestras categorías</h2>
+    <p class="section-sub">Encuentra todo lo que tu hogar necesita organizado en categorías</p>
+
+    <!-- Pestañas -->
+    <div class="cat-tabs" id="catTabs"></div>
+
+    <!-- Paneles por categoría padre -->
+    <div id="catPanels"></div>
+  </section>
+
+  <!-- ── PROMO BANNER ── -->
+  <div class="promo-wrapper">
+    <div class="promo-text">
+      <h2>🔥 Ofertas de temporada activas</h2>
+      <p>No te pierdas los mejores descuentos en productos seleccionados de todas las categorías. Válido en todas nuestras sucursales.</p>
+      <a href="#ofertas" class="btn-primary" style="display:inline-block;margin-top:24px;">Ver todas las ofertas</a>
+    </div>
+    <div class="promo-percent">50%</div>
+  </div>
+
+  <!-- ── PRODUCTOS DESTACADOS ── -->
+  <section id="ofertas">
+    <div class="section-label">⭐ Más vendidos</div>
+    <h2 class="section-title">Productos destacados</h2>
+    <p class="section-sub">Los favoritos de nuestros clientes esta semana, de todas nuestras categorías</p>
+    <div class="prod-tabs" id="prodTabs"></div>
+    <div class="products-scroll" id="productsScroll"><div style="padding:24px;color:var(--gray)">Cargando productos…</div></div>
+  </section>
+
+  <!-- ── SUCURSALES ── -->
+  <section id="sucursales" style="background: var(--white); max-width: 100%; padding: 72px 40px;">
+    <div style="max-width:1280px; margin:0 auto;">
+      <div class="section-label">📍 Ubicaciones</div>
+      <h2 class="section-title">Nuestras sucursales</h2>
+      <p class="section-sub">Visítanos en cualquiera de nuestros 5 puntos en Colombia</p>
+      <div class="sucursales-grid" id="sucursalesGrid">
+        <!-- Generados por JS -->
+      </div>
+    </div>
+  </section>
+
+  <!-- ── FOOTER ── -->
+  <footer>
+    <div class="footer-top">
+      <div class="footer-brand">
+        <strong>🛒 Mi Gran Compra</strong>
+        <p>Tu supermercado de confianza. Más de 200 productos para que tu hogar siempre esté bien abastecido, con la calidad y el precio que mereces.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Categorías</h4>
+        <ul id="footerCatList">
+          <li><a href="#categorias">Alimentos</a></li>
+          <li><a href="#categorias">Tecnología</a></li>
+          <li><a href="#categorias">Deportes</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Empresa</h4>
+        <ul>
+          <li><a href="#">Quiénes somos</a></li>
+          <li><a href="#">Trabaja con nosotros</a></li>
+          <li><a href="#">Proveedores</a></li>
+          <li><a href="#">Política de privacidad</a></li>
+          <li><a href="#">Términos y condiciones</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Atención al cliente</h4>
+        <div class="footer-hotline">
+          <span>Línea gratuita</span>
+          <strong>01 8000 MI GRAN</strong>
+        </div>
+        <p style="margin-top:14px;font-size:.82rem;">Lun – Sáb: 7:00 am – 10:00 pm<br/>Dom: 8:00 am – 8:00 pm</p>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 Mi Gran Compra S.A.S. Todos los derechos reservados.</span>
+      <span>Hecho con ❤️ en Colombia 🇨🇴</span>
+    </div>
+  </footer>
+
+  <script>
+    const formatCOP = n => "$ " + n.toLocaleString("es-CO");
+
+    /* ── Mapa de metadatos por categoría ─────────────────────────────────── */
+    const badgeClass = { ALM: 'alm', TEC: 'tec', DEP: 'dep' };
+
+    const catMeta = {
+      // Padres
+      ALM: { emoji: "🛒", img: "https://images.unsplash.com/photo-1542838132-92c53300491e?w=400&h=200&fit=crop" },
+      TEC: { emoji: "💻", img: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=400&h=200&fit=crop" },
+      DEP: { emoji: "🏅", img: "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=400&h=200&fit=crop" },
+      // Alimentos
+      GC:  { emoji: "🌾", img: "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=400&h=200&fit=crop" },
+      AC:  { emoji: "🫒", img: "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=400&h=200&fit=crop" },
+      LAC: { emoji: "🥛", img: "https://images.unsplash.com/photo-1550583724-b2692b85b150?w=400&h=200&fit=crop" },
+      PAN: { emoji: "🍞", img: "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400&h=200&fit=crop" },
+      CAR: { emoji: "🥩", img: "https://images.unsplash.com/photo-1448907503123-67254d59ca4f?w=400&h=200&fit=crop" },
+      BEB: { emoji: "🥤", img: "https://images.unsplash.com/photo-1581006852262-e4307cf6283a?w=400&h=200&fit=crop" },
+      AH:  { emoji: "🧹", img: "https://images.unsplash.com/photo-1563453392212-326f5e854473?w=400&h=200&fit=crop" },
+      HP:  { emoji: "🧴", img: "https://images.unsplash.com/photo-1522338242992-e1a54906a8da?w=400&h=200&fit=crop" },
+      SN:  { emoji: "🍿", img: "https://images.unsplash.com/photo-1621939514649-280e2ee25f60?w=400&h=200&fit=crop" },
+      EN:  { emoji: "🥫", img: "https://images.unsplash.com/photo-1534483509719-3feaee7c30da?w=400&h=200&fit=crop" },
+      BB:  { emoji: "👶", img: "https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=400&h=200&fit=crop" },
+      // Tecnología
+      TC:  { emoji: "🖥️", img: "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=400&h=200&fit=crop" },
+      TF:  { emoji: "📱", img: "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=400&h=200&fit=crop" },
+      TV:  { emoji: "📺", img: "https://images.unsplash.com/photo-1593359677879-a4bb92f829e1?w=400&h=200&fit=crop" },
+      TA:  { emoji: "🎧", img: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=200&fit=crop" },
+      TT:  { emoji: "📲", img: "https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?w=400&h=200&fit=crop" },
+      // Deportes
+      DF:  { emoji: "⚽", img: "https://images.unsplash.com/photo-1575361204480-aadea25e6e68?w=400&h=200&fit=crop" },
+      DT:  { emoji: "🎾", img: "https://images.unsplash.com/photo-1595435934249-5df7ed86e1c0?w=400&h=200&fit=crop" },
+      DC:  { emoji: "🚴", img: "https://images.unsplash.com/photo-1544191696-102dbf6edb87?w=400&h=200&fit=crop" },
+      DB:  { emoji: "🥊", img: "https://images.unsplash.com/photo-1549719386-74dfcbf7dbed?w=400&h=200&fit=crop" },
+      DG:  { emoji: "🏋️", img: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=400&h=200&fit=crop" },
+    };
+
+    /* ── Carga dinámica de categorías desde la API ────────────────────────── */
+    async function cargarCategorias() {
+      try {
+        const [cats, productos] = await Promise.all([
+          fetch('/api/categorias').then(r => r.json()),
+          fetch('/api/productos').then(r => r.json()),
+        ]);
+
+        // Contar productos por categoriaId
+        const conteo = {};
+        productos.forEach(p => { conteo[p.categoriaId] = (conteo[p.categoriaId] || 0) + 1; });
+
+        const padres = cats.filter(c => c.padre === null);
+        const hijos  = cats.filter(c => c.padre !== null);
+
+        const tabsEl   = document.getElementById('catTabs');
+        const panelsEl = document.getElementById('catPanels');
+
+        padres.forEach((padre, idx) => {
+          const meta   = catMeta[padre.id] || { emoji: '📦', img: '' };
+          const subs   = hijos.filter(h => h.padre === padre.id);
+          const totalPadre = subs.reduce((s, h) => s + (conteo[h.id] || 0), 0);
+
+          // Pestaña
+          const tab = document.createElement('button');
+          tab.className = 'cat-tab' + (idx === 0 ? ' active' : '');
+          tab.dataset.panel = padre.id;
+          tab.innerHTML = `${meta.emoji} ${padre.nombre} <span class="tab-count">${totalPadre}</span>`;
+          tab.addEventListener('click', () => switchTab(padre.id));
+          tabsEl.appendChild(tab);
+
+          // Panel
+          const panel = document.createElement('div');
+          panel.className = 'cat-panel' + (idx === 0 ? ' active' : '');
+          panel.id = 'panel-' + padre.id;
+
+          subs.forEach(sub => {
+            const sm    = catMeta[sub.id] || { emoji: '📦', img: meta.img };
+            const total = conteo[sub.id] || 0;
+            const card  = document.createElement('a');
+            card.className = 'cat-card';
+            card.href      = `/catalogo.html?cat=${sub.id}`;
+            card.innerHTML = `
+              <img class="cat-img" src="${sm.img}" alt="${sub.nombre}"
+                   onerror="this.src='https://images.unsplash.com/photo-1542838132-92c53300491e?w=400&h=200&fit=crop'"
+                   loading="lazy" />
+              <span class="cat-badge">${total} productos</span>
+              <div class="cat-body">
+                <div class="cat-emoji">${sm.emoji}</div>
+                <div class="cat-info">
+                  <strong>${sub.nombre}</strong>
+                  <span>${sub.descripcion}</span>
+                </div>
+              </div>
+              <div style="text-align:right;padding:0 16px 14px;font-size:.75rem;font-weight:700;color:var(--green)">Ver productos →</div>`;
+            panel.appendChild(card);
+          });
+
+          panelsEl.appendChild(panel);
+        });
+
+        // Actualizar footer con subcategorías más relevantes
+        const footerList = document.getElementById('footerCatList');
+        if (footerList) {
+          const top = hijos.sort((a, b) => (conteo[b.id] || 0) - (conteo[a.id] || 0)).slice(0, 6);
+          footerList.innerHTML = top.map(c =>
+            `<li><a href="/catalogo.html?cat=${c.id}">${c.nombre}</a></li>`
+          ).join('');
+        }
+
+        // Animaciones
+        animarTarjetas();
+
+      } catch(e) {
+        console.error('Error cargando categorías:', e);
+      }
+    }
+
+    function switchTab(padreId) {
+      document.querySelectorAll('.cat-tab').forEach(t => t.classList.toggle('active', t.dataset.panel === padreId));
+      document.querySelectorAll('.cat-panel').forEach(p => p.classList.toggle('active', p.id === 'panel-' + padreId));
+      animarTarjetas();
+    }
+
+    /* ── Productos destacados – carga dinámica desde API ─────────────────── */
+
+    /* Obtiene URL de imagen fija para la tarjeta de producto.
+       Usa catMeta (fotos reales de Unsplash) redimensionadas a 220×150.
+       Jerarquía: subcategoría → categoría padre → fallback general. */
+    function getProdImgSrc(p, padreId) {
+      const entry = catMeta[p.categoriaId] || catMeta[padreId];
+      if (entry?.img) return entry.img.replace('w=400&h=200', 'w=220&h=150');
+      return 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=220&h=150&fit=crop';
+    }
+
+    /* IDs seleccionados por pestaña (máx. 20 por grupo) */
+    const featuredIds = {
+      ALM: ['P001','GC003','GC004','P002','AC001','P003','LA001','LA002',
+             'P004','PA001','PA006','P005','CA001','CA003','P006','BE002',
+             'P009','SN003','P011','P015'],
+      TEC: ['T001','TC001','TC002','TC004','TC006','TC008',
+             'T002','TF001','TF002','TF003','TF006','TF008',
+             'T003','TV001','TV002','TV003',
+             'T004','TA002','T005','TT001'],
+      DEP: ['D001','DF001','DF003','DF006',
+             'D002','DT001','DT002','DT003',
+             'D003','DC001','DC002','DC004',
+             'D004','DB001','D005','DG001','DG002','DG003'],
+    };
+
+    /* Configuración de pestañas */
+    const featTabCfg = [
+      { id:'ALM', label:'🛒 Alimentos',    cls:'alm' },
+      { id:'TEC', label:'💻 Tecnología',   cls:'tec' },
+      { id:'DEP', label:'🏅 Deportes',     cls:'dep' },
+    ];
+
+    let allProducts = [];
+    let allCatsFlat = [];
+
+    function getPadreId(p) {
+      const cat = allCatsFlat.find(c => c.id === p.categoriaId);
+      if (!cat) return 'ALM';
+      return cat.padre ?? cat.id;  // si es padre, usa su propio id
+    }
+
+    function buildProdCard(p) {
+      const padreId = getPadreId(p);
+      const src     = getProdImgSrc(p, padreId);
+      const fallback = (catMeta[padreId]?.img || catMeta.ALM.img).replace('w=400&h=200', 'w=220&h=150');
+      const cat   = allCatsFlat.find(c => c.id === p.categoriaId);
+      const badge = badgeClass[padreId] || 'alm';
+      const card  = document.createElement('div');
+      card.className = 'product-card';
+      card.innerHTML = `
+        <div class="product-img-wrap">
+          <img src="${src}"
+               onerror="this.src='${fallback}'"
+               alt="${p.nombre}" loading="lazy" />
+        </div>
+        <div class="product-badge ${badge}">${cat?.nombre ?? p.categoriaId}</div>
+        <div class="product-name">${p.nombre}</div>
+        <div class="product-price">${formatCOP(p.precio)} <small>/ ${p.unidad}</small></div>
+        <button class="product-add" onclick="agregarAlCarrito('${p.id}')">+ Agregar</button>
+      `;
+      return card;
+    }
+
+    function renderFeatured(padreId) {
+      const scroll = document.getElementById('productsScroll');
+      scroll.innerHTML = '';
+      const ids = featuredIds[padreId] || [];
+      let shown = 0;
+      ids.forEach(id => {
+        const p = allProducts.find(x => x.id === id);
+        if (p) { scroll.appendChild(buildProdCard(p)); shown++; }
+      });
+      if (shown === 0) {
+        scroll.innerHTML = '<p style="padding:24px;color:var(--gray)">Sin productos en esta categoría.</p>';
+      }
+      document.querySelectorAll('.prod-tab').forEach(t =>
+        t.classList.toggle('active', t.dataset.tab === padreId)
+      );
+    }
+
+    async function cargarProductosDestacados() {
+      try {
+        [allProducts, allCatsFlat] = await Promise.all([
+          fetch('/api/productos').then(r => r.json()),
+          fetch('/api/categorias').then(r => r.json()),
+        ]);
+
+        const tabsEl = document.getElementById('prodTabs');
+        featTabCfg.forEach((cfg, idx) => {
+          const total = (featuredIds[cfg.id] || []).filter(id => allProducts.find(p => p.id === id)).length;
+          const btn   = document.createElement('button');
+          btn.className  = `prod-tab ${cfg.cls}${idx === 0 ? ' active' : ''}`;
+          btn.dataset.tab = cfg.id;
+          btn.textContent = `${cfg.label}  (${total})`;
+          btn.addEventListener('click', () => renderFeatured(cfg.id));
+          tabsEl.appendChild(btn);
+        });
+
+        renderFeatured('ALM');
+      } catch(e) {
+        console.error('Error cargando productos destacados:', e);
+        document.getElementById('productsScroll').innerHTML =
+          '<p style="padding:24px;color:var(--gray)">No se pudieron cargar los productos.</p>';
+      }
+    }
+
+    cargarProductosDestacados();
+
+    /* ── Sucursales desde API ─────────────────────────────────────────────── */
+    async function cargarSucursales() {
+      try {
+        const data = await fetch('/api/sucursales').then(r => r.json());
+        const grid = document.getElementById("sucursalesGrid");
+        data.forEach(s => {
+          const card = document.createElement("div");
+          card.className = "suc-card";
+          card.innerHTML = `
+            <div class="suc-header">
+              <h3>🏪 ${s.nombre}</h3>
+              <span class="suc-tipo">${s.tipo}</span>
+            </div>
+            <div class="suc-info">
+              <div class="suc-row">📍 <span><strong>${s.ciudad}</strong> — ${s.direccion}</span></div>
+              <div class="suc-row">🕐 <span>${s.horario}</span></div>
+              <div class="suc-row">👥 <span>${s.empleados} empleados</span></div>
+            </div>`;
+          grid.appendChild(card);
+        });
+        animarTarjetas();
+      } catch(e) { console.error('Error cargando sucursales:', e); }
+    }
+
+    /* ── Animaciones con Intersection Observer ───────────────────────────── */
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.style.opacity = "1";
+          e.target.style.transform = "translateY(0)";
+        }
+      });
+    }, { threshold: 0.08 });
+
+    function animarTarjetas() {
+      document.querySelectorAll(".cat-card:not([data-obs]), .suc-card:not([data-obs]), .stat-item:not([data-obs])").forEach(el => {
+        el.dataset.obs = "1";
+        el.style.opacity = "0";
+        el.style.transform = "translateY(20px)";
+        el.style.transition = "opacity .5s ease, transform .5s ease";
+        observer.observe(el);
+      });
+    }
+
+    /* ══════════════════════════════════════════════════════════════════
+       AUTH & CARRITO
+    ══════════════════════════════════════════════════════════════════ */
+
+    let sesionActual = null;   // objeto usuario o null
+    let metodoPagoSel = 'tarjeta';
+
+    /* ── Toast ── */
+    function showToast(msg, ms = 2800) {
+      const el = document.getElementById('mgcToast');
+      el.textContent = msg;
+      el.classList.add('show');
+      setTimeout(() => el.classList.remove('show'), ms);
+    }
+
+    /* ── Inicialización: consulta sesión existente ── */
+    async function initAuth() {
+      try {
+        const data = await fetch('/api/auth/perfil').then(r => r.ok ? r.json() : null);
+        if (data) { sesionActual = data; actualizarNavUser(); actualizarBadge(); }
+      } catch {}
+    }
+
+    /* ── Actualiza el botón de usuario en navbar ── */
+    function actualizarNavUser() {
+      const btn   = document.getElementById('navUserBtn');
+      const label = document.getElementById('navUserLabel');
+      if (sesionActual) {
+        const nombre = sesionActual.nombre.split(' ')[0];
+        label.textContent = nombre;
+        btn.classList.add('logged');
+      } else {
+        label.textContent = 'Ingresar';
+        btn.classList.remove('logged');
+      }
+    }
+
+    /* ── Click en botón usuario del navbar ── */
+    function onNavUserClick() {
+      if (sesionActual) {
+        // Mostrar menú pequeño con "Cerrar sesión"
+        if (confirm(`¿Cerrar sesión de ${sesionActual.nombre}?`)) cerrarSesion();
+      } else {
+        abrirAuthModal();
+      }
+    }
+
+    /* ── Modal Auth ── */
+    function abrirAuthModal() {
+      document.getElementById('authOverlay').classList.add('show');
+    }
+    function cerrarAuthModal() {
+      document.getElementById('authOverlay').classList.remove('show');
+      document.getElementById('loginError').textContent = '';
+      document.getElementById('regError').textContent   = '';
+    }
+    function switchAuthTab(tab) {
+      document.getElementById('tabLogin').classList.toggle('active',    tab === 'login');
+      document.getElementById('tabRegistro').classList.toggle('active', tab === 'registro');
+      document.getElementById('formLogin').classList.toggle('active',    tab === 'login');
+      document.getElementById('formRegistro').classList.toggle('active', tab === 'registro');
+    }
+
+    async function submitLogin(e) {
+      e.preventDefault();
+      const email    = document.getElementById('loginEmail').value;
+      const password = document.getElementById('loginPass').value;
+      const errEl    = document.getElementById('loginError');
+      errEl.textContent = '';
+      try {
+        const res  = await fetch('/api/auth/login', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password }),
+        });
+        const data = await res.json();
+        if (!res.ok) { errEl.textContent = data.error; return; }
+        sesionActual = data.usuario;
+        actualizarNavUser();
+        cerrarAuthModal();
+        showToast(`¡Bienvenido/a, ${sesionActual.nombre.split(' ')[0]}! 👋`);
+        actualizarBadge();
+      } catch { errEl.textContent = 'Error de conexión'; }
+    }
+
+    async function submitRegistro(e) {
+      e.preventDefault();
+      const nombre   = document.getElementById('regNombre').value;
+      const email    = document.getElementById('regEmail').value;
+      const password = document.getElementById('regPass').value;
+      const errEl    = document.getElementById('regError');
+      errEl.textContent = '';
+      try {
+        const res  = await fetch('/api/auth/registro', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ nombre, email, password }),
+        });
+        const data = await res.json();
+        if (!res.ok) { errEl.textContent = data.error; return; }
+        sesionActual = data.usuario;
+        actualizarNavUser();
+        cerrarAuthModal();
+        showToast(`¡Cuenta creada! Bienvenido/a, ${sesionActual.nombre.split(' ')[0]} 🎉`);
+        actualizarBadge();
+      } catch { errEl.textContent = 'Error de conexión'; }
+    }
+
+    async function cerrarSesion() {
+      await fetch('/api/auth/logout', { method: 'POST' });
+      sesionActual = null;
+      actualizarNavUser();
+      actualizarBadge(0);
+      showToast('Sesión cerrada');
+    }
+
+    /* ── Carrito ── */
+    function abrirCarrito() {
+      if (!sesionActual) { abrirAuthModal(); return; }
+      document.getElementById('cartSidebar').classList.add('open');
+      document.getElementById('mgcOverlay').classList.add('show');
+      cargarCarrito();
+    }
+    function cerrarCarrito() {
+      document.getElementById('cartSidebar').classList.remove('open');
+      document.getElementById('mgcOverlay').classList.remove('show');
+    }
+    function cerrarTodosModales() {
+      cerrarCarrito();
+      cerrarCheckout();
+    }
+
+    async function cargarCarrito() {
+      const body   = document.getElementById('cartBody');
+      const footer = document.getElementById('cartFooter');
+      body.innerHTML = '<div style="padding:24px;color:var(--gray);text-align:center">Cargando…</div>';
+      try {
+        const data = await fetch('/api/carrito').then(r => r.json());
+        if (!data.items?.length) {
+          body.innerHTML = `<div class="cart-empty">
+            <span class="cart-empty-icon">🛒</span>
+            <span>Tu carrito está vacío</span>
+            <small style="color:var(--gray)">Agrega productos desde el catálogo</small>
+          </div>`;
+          footer.style.display = 'none';
+          actualizarBadge(0);
+          return;
+        }
+        footer.style.display = '';
+        document.getElementById('cartTotal').textContent = formatCOP(data.total);
+        actualizarBadge(data.totalItems);
+
+        body.innerHTML = '';
+        data.items.forEach(item => {
+          const padreId  = allCatsFlat.find(c => c.id === item.categoriaId)?.padre ?? item.categoriaId;
+          const meta     = catMeta[item.categoriaId] || catMeta[padreId] || {};
+          const imgSrc   = (meta.img || '').replace('w=400&h=200', 'w=64&h=64');
+          const div      = document.createElement('div');
+          div.className  = 'cart-item';
+          div.dataset.pid = item.productoId;
+          div.innerHTML  = `
+            <img class="cart-item-img" src="${imgSrc}" alt="${item.nombre}"
+                 onerror="this.style.display='none'" />
+            <div class="cart-item-info">
+              <div class="cart-item-name">${item.nombre}</div>
+              <div class="cart-item-cat">${item.categoria}</div>
+              <div class="cart-item-price">${formatCOP(item.precio * item.cantidad)}</div>
+            </div>
+            <div class="cart-qty">
+              <button class="qty-btn" onclick="cambiarCantidad('${item.productoId}', ${item.cantidad - 1})">−</button>
+              <span class="qty-val">${item.cantidad}</span>
+              <button class="qty-btn" onclick="cambiarCantidad('${item.productoId}', ${item.cantidad + 1})">+</button>
+            </div>
+            <button class="cart-del" title="Eliminar" onclick="eliminarDelCarrito('${item.productoId}')">🗑️</button>`;
+          body.appendChild(div);
+        });
+      } catch { body.innerHTML = '<div style="padding:24px;color:var(--gray)">Error al cargar</div>'; }
+    }
+
+    async function agregarAlCarrito(productoId) {
+      if (!sesionActual) { abrirAuthModal(); return; }
+      try {
+        const res  = await fetch('/api/carrito/agregar', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ productoId, cantidad: 1 }),
+        });
+        const data = await res.json();
+        if (!res.ok) { showToast('Error: ' + data.error); return; }
+        actualizarBadge(data.totalItems);
+        showToast('✅ Producto agregado al carrito');
+      } catch { showToast('Error de conexión'); }
+    }
+
+    async function cambiarCantidad(productoId, nuevaCantidad) {
+      if (nuevaCantidad < 1) { eliminarDelCarrito(productoId); return; }
+      await fetch(`/api/carrito/item/${productoId}`, {
+        method: 'PUT', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cantidad: nuevaCantidad }),
+      });
+      cargarCarrito();
+    }
+
+    async function eliminarDelCarrito(productoId) {
+      await fetch(`/api/carrito/item/${productoId}`, { method: 'DELETE' });
+      cargarCarrito();
+    }
+
+    function actualizarBadge(n) {
+      const badge = document.getElementById('cartBadge');
+      if (n == null) {
+        fetch('/api/carrito').then(r => r.ok ? r.json() : { totalItems: 0 })
+          .then(d => actualizarBadge(d.totalItems)).catch(() => {});
+        return;
+      }
+      badge.textContent = n;
+      badge.style.display = n > 0 ? 'flex' : 'none';
+    }
+
+    /* ── Checkout ── */
+    function abrirCheckout() {
+      cerrarCarrito();
+      // Rellenar resumen
+      fetch('/api/carrito').then(r => r.json()).then(data => {
+        const el = document.getElementById('checkoutResumen');
+        let html = data.items.map(i =>
+          `<div class="checkout-item-row">
+            <span>${i.nombre} × ${i.cantidad}</span>
+            <span>${formatCOP(i.precio * i.cantidad)}</span>
+          </div>`).join('');
+        html += `<hr class="checkout-divider">
+          <div class="checkout-total-row">
+            <span>Total</span><span>${formatCOP(data.total)}</span>
+          </div>`;
+        el.innerHTML = html;
+        document.getElementById('checkoutOverlay').classList.add('show');
+      });
+    }
+    function cerrarCheckout() {
+      document.getElementById('checkoutOverlay').classList.remove('show');
+      document.getElementById('checkoutError').textContent = '';
+    }
+    function seleccionarPago(metodo) {
+      metodoPagoSel = metodo;
+      document.querySelectorAll('.pay-method').forEach(b =>
+        b.classList.toggle('selected', b.dataset.metodo === metodo));
+    }
+
+    async function confirmarPago() {
+      const direccion = document.getElementById('checkoutDireccion').value.trim();
+      const errEl     = document.getElementById('checkoutError');
+      errEl.textContent = '';
+      if (!direccion) { errEl.textContent = 'Ingresa una dirección de entrega'; return; }
+
+      try {
+        const res  = await fetch('/api/carrito/checkout', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ direccion, metodoPago: metodoPagoSel }),
+        });
+        const data = await res.json();
+        if (!res.ok) { errEl.textContent = data.error; return; }
+
+        cerrarCheckout();
+        actualizarBadge(0);
+        showToast(`🎉 ¡Pedido #${data.orden.id} confirmado! +${data.puntosGanados} puntos`, 4000);
+        document.getElementById('checkoutDireccion').value = '';
+        // Actualizar puntos en sesion local
+        sesionActual.puntos = data.totalPuntos;
+      } catch { errEl.textContent = 'Error de conexión'; }
+    }
+
+    /* ── Inicialización ─────────────────────────────────────────────── */
+    cargarCategorias();
+    cargarSucursales();
+    animarTarjetas();
+    initAuth();
+  </script>
+
+  <!-- ── TOAST ── -->
+  <div id="mgcToast"></div>
+
+  <!-- ── OVERLAY GLOBAL ── -->
+  <div class="mgc-overlay" id="mgcOverlay" onclick="cerrarTodosModales()"></div>
+
+  <!-- ── MODAL AUTH ── -->
+  <div class="mgc-overlay" id="authOverlay">
+    <div class="auth-modal" onclick="event.stopPropagation()">
+      <button class="close-btn" onclick="cerrarAuthModal()">✕</button>
+      <div style="text-align:center;margin-bottom:20px">
+        <div style="font-size:2rem;margin-bottom:6px">🛒</div>
+        <strong style="font-size:1.1rem">Mi Gran Compra</strong>
+      </div>
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="tabLogin"   onclick="switchAuthTab('login')">Iniciar sesión</button>
+        <button class="auth-tab"        id="tabRegistro" onclick="switchAuthTab('registro')">Registrarme</button>
+      </div>
+
+      <!-- Login -->
+      <form class="auth-form active" id="formLogin" onsubmit="submitLogin(event)">
+        <div>
+          <label>Correo electrónico</label>
+          <input type="email" id="loginEmail" placeholder="tu@correo.com" required autocomplete="email" />
+        </div>
+        <div>
+          <label>Contraseña</label>
+          <input type="password" id="loginPass" placeholder="••••••••" required autocomplete="current-password" />
+        </div>
+        <p class="auth-error" id="loginError"></p>
+        <button type="submit" class="auth-submit">Ingresar</button>
+        <p class="auth-demo-hint">Demo: <strong>carlos@demo.com</strong> / <strong>Demo1234</strong></p>
+      </form>
+
+      <!-- Registro -->
+      <form class="auth-form" id="formRegistro" onsubmit="submitRegistro(event)">
+        <div>
+          <label>Nombre completo</label>
+          <input type="text" id="regNombre" placeholder="Tu nombre" required autocomplete="name" />
+        </div>
+        <div>
+          <label>Correo electrónico</label>
+          <input type="email" id="regEmail" placeholder="tu@correo.com" required autocomplete="email" />
+        </div>
+        <div>
+          <label>Contraseña <span style="color:var(--gray);font-weight:400">(mín. 6 caracteres)</span></label>
+          <input type="password" id="regPass" placeholder="••••••••" required autocomplete="new-password" minlength="6" />
+        </div>
+        <p class="auth-error" id="regError"></p>
+        <button type="submit" class="auth-submit">Crear cuenta</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ── CARRITO SIDEBAR ── -->
+  <div class="cart-sidebar" id="cartSidebar">
+    <div class="cart-header">
+      <h3>🛒 Mi carrito</h3>
+      <button class="cart-close" onclick="cerrarCarrito()">✕</button>
+    </div>
+    <div class="cart-body" id="cartBody">
+      <div class="cart-empty">
+        <span class="cart-empty-icon">🛒</span>
+        <span>Tu carrito está vacío</span>
+        <small style="color:var(--gray)">Agrega productos desde el catálogo</small>
+      </div>
+    </div>
+    <div class="cart-footer" id="cartFooter" style="display:none">
+      <div class="cart-total-row">
+        <span class="cart-total-label">Total</span>
+        <span class="cart-total-val" id="cartTotal">$0</span>
+      </div>
+      <button class="cart-checkout-btn" onclick="abrirCheckout()">Proceder al pago →</button>
+    </div>
+  </div>
+
+  <!-- ── CHECKOUT MODAL ── -->
+  <div class="mgc-overlay" id="checkoutOverlay">
+    <div class="checkout-modal" onclick="event.stopPropagation()">
+      <button class="close-btn" onclick="cerrarCheckout()">✕</button>
+      <h3>💳 Finalizar compra</h3>
+
+      <div class="checkout-section">
+        <h4>📦 Resumen del pedido</h4>
+        <div class="checkout-resumen" id="checkoutResumen"></div>
+      </div>
+
+      <div class="checkout-section">
+        <h4>📍 Dirección de entrega</h4>
+        <input class="checkout-input" id="checkoutDireccion" type="text" placeholder="Ej: Cra 15 # 93-47, Bogotá" />
+      </div>
+
+      <div class="checkout-section">
+        <h4>💰 Método de pago</h4>
+        <div class="pay-methods" id="payMethods">
+          <button class="pay-method selected" data-metodo="tarjeta" onclick="seleccionarPago('tarjeta')">
+            <span class="pay-method-icon">💳</span>Tarjeta
+          </button>
+          <button class="pay-method" data-metodo="efectivo" onclick="seleccionarPago('efectivo')">
+            <span class="pay-method-icon">💵</span>Efectivo
+          </button>
+          <button class="pay-method" data-metodo="nequi" onclick="seleccionarPago('nequi')">
+            <span class="pay-method-icon">📲</span>Nequi
+          </button>
+          <button class="pay-method" data-metodo="daviplata" onclick="seleccionarPago('daviplata')">
+            <span class="pay-method-icon">🏦</span>Daviplata
+          </button>
+        </div>
+      </div>
+
+      <p class="checkout-error" id="checkoutError"></p>
+      <button class="checkout-confirm-btn" onclick="confirmarPago()">✅ Confirmar pedido</button>
+    </div>
+  </div>
+
+</body>
+</html>

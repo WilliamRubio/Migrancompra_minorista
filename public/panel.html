@@ -1,0 +1,1072 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Panel de Control — Mi Gran Compra</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:      #0f1117;
+      --sidebar: #1a1d27;
+      --border:  #2d3148;
+      --card:    #1a1d27;
+      --card2:   #1e2235;
+      --purple:  #7c6aff;
+      --purple2: #a78bfa;
+      --text:    #e2e8f0;
+      --muted:   #64748b;
+      --muted2:  #94a3b8;
+      --green:   #22c55e;
+      --orange:  #f97316;
+      --red:     #ef4444;
+      --yellow:  #eab308;
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* ── SIDEBAR ── */
+    aside {
+      width: 240px;
+      min-width: 240px;
+      background: var(--sidebar);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+
+    .logo {
+      padding: 20px 18px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .logo a {
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo-badge {
+      background: linear-gradient(135deg, #00b04f, #007a36);
+      color: #fff;
+      font-weight: 900;
+      font-size: 1rem;
+      width: 36px;
+      height: 36px;
+      border-radius: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .logo h1 { font-size: .95rem; font-weight: 700; color: var(--purple2); letter-spacing: .3px; }
+    .logo p  { font-size: .68rem; color: var(--muted); margin-top: 2px; }
+
+    .nav-section {
+      padding: 14px 12px 6px;
+      font-size: .68rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+
+    .nav-btn {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: calc(100% - 16px);
+      padding: 9px 16px;
+      margin: 1px 8px;
+      background: none;
+      border: none;
+      color: var(--muted2);
+      cursor: pointer;
+      font-size: .87rem;
+      border-radius: 6px;
+      text-align: left;
+      transition: background .15s, color .15s;
+    }
+
+    .nav-btn:hover  { background: #252840; color: var(--text); }
+    .nav-btn.active { background: #2d2f5e; color: var(--purple2); font-weight: 600; }
+    .nav-btn .icon  { font-size: 1rem; width: 20px; text-align: center; }
+
+    .back-btn {
+      margin: 12px;
+      padding: 8px 14px;
+      background: #252840;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--muted2);
+      font-size: .82rem;
+      cursor: pointer;
+      text-align: center;
+      text-decoration: none;
+      display: block;
+      transition: background .15s;
+    }
+    .back-btn:hover { background: #2d2f5e; color: var(--text); }
+
+    /* ── MAIN ── */
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    header {
+      background: var(--sidebar);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+
+    .header-left { display: flex; align-items: center; gap: 10px; }
+    header h2 { font-size: 1.05rem; font-weight: 600; }
+    header span { color: var(--muted); font-size: .85rem; }
+
+    .header-badges { display: flex; gap: 8px; }
+
+    .api-badge {
+      font-size: .72rem;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-weight: 600;
+      font-family: monospace;
+    }
+
+    .api-badge.get { background: #1a3a1a; color: var(--green); border: 1px solid #2a5a2a; }
+
+    .content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* ── KPI CARDS ── */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+      gap: 16px;
+    }
+
+    .kpi-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .kpi-icon {
+      font-size: 1.6rem;
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .kpi-icon.purple  { background: #2d2060; }
+    .kpi-icon.green   { background: #0a2e1a; }
+    .kpi-icon.orange  { background: #2e1800; }
+    .kpi-icon.blue    { background: #0a1e3a; }
+    .kpi-icon.red     { background: #2e0a0a; }
+
+    .kpi-info strong { display: block; font-size: 1.5rem; font-weight: 800; }
+    .kpi-info span   { font-size: .78rem; color: var(--muted2); font-weight: 500; }
+
+    /* ── TOOL PANEL ── */
+    .tool-panel {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .tool-panel-header {
+      padding: 14px 18px;
+      background: var(--card2);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .tool-panel-header h3 {
+      font-size: .92rem;
+      font-weight: 600;
+      color: var(--purple2);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .tool-desc { font-size: .78rem; color: var(--muted); }
+
+    .tool-body {
+      padding: 16px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .input-row label { font-size: .8rem; color: var(--muted2); min-width: 70px; }
+
+    .input-row input,
+    .input-row select {
+      flex: 1;
+      min-width: 140px;
+      padding: 7px 12px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-size: .85rem;
+      outline: none;
+      transition: border-color .15s;
+    }
+
+    .input-row input:focus,
+    .input-row select:focus { border-color: var(--purple); }
+
+    .input-row select option { background: var(--sidebar); }
+
+    .btn {
+      padding: 7px 18px;
+      background: var(--purple);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: .85rem;
+      font-weight: 600;
+      transition: background .15s;
+      white-space: nowrap;
+    }
+
+    .btn:hover { background: #6c59f0; }
+
+    /* ── RESULT TABLE ── */
+    .result-wrap {
+      margin-top: 4px;
+      border-radius: 8px;
+      overflow: auto;
+      max-height: 420px;
+      border: 1px solid var(--border);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .82rem;
+    }
+
+    thead tr { background: var(--card2); position: sticky; top: 0; }
+
+    th {
+      padding: 10px 14px;
+      text-align: left;
+      font-weight: 600;
+      color: var(--muted2);
+      font-size: .75rem;
+      letter-spacing: .5px;
+      text-transform: uppercase;
+      border-bottom: 1px solid var(--border);
+    }
+
+    td {
+      padding: 9px 14px;
+      border-bottom: 1px solid #1e2235;
+      vertical-align: middle;
+    }
+
+    tbody tr:hover { background: #1e2235; }
+    tbody tr:last-child td { border-bottom: none; }
+
+    .tag {
+      display: inline-block;
+      padding: 2px 9px;
+      border-radius: 20px;
+      font-size: .72rem;
+      font-weight: 600;
+    }
+
+    .tag.green  { background: #0a2e1a; color: var(--green); }
+    .tag.orange { background: #2e1800; color: var(--orange); }
+    .tag.red    { background: #2e0a0a; color: var(--red); }
+    .tag.purple { background: #1e1640; color: var(--purple2); }
+    .tag.yellow { background: #1e1600; color: var(--yellow); }
+    .tag.blue   { background: #0a1e3a; color: #60a5fa; }
+    .tag.gray   { background: #1a1e2e; color: var(--muted2); }
+
+    .empty-msg {
+      padding: 32px;
+      text-align: center;
+      color: var(--muted);
+      font-size: .9rem;
+    }
+
+    .loading {
+      padding: 24px;
+      text-align: center;
+      color: var(--muted2);
+      font-size: .85rem;
+    }
+
+    /* ── RESUMEN CARDS ── */
+    .resumen-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 14px;
+    }
+
+    .res-card {
+      background: var(--card2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px 18px;
+    }
+
+    .res-card .res-label {
+      font-size: .75rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      margin-bottom: 6px;
+    }
+
+    .res-card .res-val {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    /* ── PRODUCT CARD GRID ── */
+    .prod-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 16px;
+    }
+
+    .prod-card {
+      background: var(--card2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .prod-card img {
+      width: 100%;
+      height: 130px;
+      object-fit: cover;
+      display: block;
+    }
+
+    .prod-card-body { padding: 12px 14px; }
+    .prod-card-body .prod-name { font-size: .88rem; font-weight: 600; margin-bottom: 6px; }
+    .prod-card-body .prod-price { font-size: 1rem; font-weight: 800; color: var(--green); }
+    .prod-card-body .prod-stock { font-size: .75rem; color: var(--muted2); margin-top: 4px; }
+
+    /* ── SCROLL ── */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  </style>
+</head>
+<body>
+
+<!-- ── SIDEBAR ── -->
+<aside>
+  <div class="logo">
+    <a href="/">
+      <div class="logo-badge">MG</div>
+      <div>
+        <h1>Mi Gran Compra</h1>
+        <p>Panel de Control</p>
+      </div>
+    </a>
+  </div>
+
+  <div class="nav-section">Panel</div>
+  <button class="nav-btn active" id="btn-resumen"    onclick="showSection('resumen')">    <span class="icon">📊</span> Resumen</button>
+
+  <div class="nav-section">Catálogo</div>
+  <button class="nav-btn" id="btn-productos"  onclick="showSection('productos')">  <span class="icon">📦</span> Productos</button>
+  <button class="nav-btn" id="btn-buscar"     onclick="showSection('buscar')">     <span class="icon">🔍</span> Buscar producto</button>
+  <button class="nav-btn" id="btn-bajo-stock" onclick="showSection('bajo-stock')"> <span class="icon">⚠️</span> Bajo stock</button>
+
+  <div class="nav-section">Clientes</div>
+  <button class="nav-btn" id="btn-clientes"   onclick="showSection('clientes')">   <span class="icon">👥</span> Todos los clientes</button>
+  <button class="nav-btn" id="btn-fidelidad"  onclick="showSection('fidelidad')">  <span class="icon">🏆</span> Por fidelidad</button>
+
+  <div class="nav-section">Órdenes</div>
+  <button class="nav-btn" id="btn-ordenes"    onclick="showSection('ordenes')">    <span class="icon">🛒</span> Todas las órdenes</button>
+  <button class="nav-btn" id="btn-ord-cli"    onclick="showSection('ord-cli')">    <span class="icon">📄</span> Por cliente</button>
+  <button class="nav-btn" id="btn-ord-estado" onclick="showSection('ord-estado')"> <span class="icon">📋</span> Por estado</button>
+
+  <div class="nav-section">Categorías</div>
+  <button class="nav-btn" id="btn-categorias"   onclick="showSection('categorias')">   <span class="icon">🏷️</span> Todas las categorías</button>
+  <button class="nav-btn" id="btn-cat-detalle" onclick="showSection('cat-detalle')"> <span class="icon">🔎</span> Productos por categoría</button>
+
+  <div class="nav-section">Sucursales</div>
+  <button class="nav-btn" id="btn-sucursales" onclick="showSection('sucursales')"> <span class="icon">🏪</span> Sucursales</button>
+  <button class="nav-btn" id="btn-suc-ciudad" onclick="showSection('suc-ciudad')"> <span class="icon">🌆</span> Por ciudad</button>
+
+  <a href="/" class="back-btn">← Volver al inicio</a>
+</aside>
+
+<!-- ── MAIN ── -->
+<main>
+  <header>
+    <div class="header-left">
+      <h2 id="headerTitle">Resumen general</h2>
+      <span id="headerSub">Vista general del sistema</span>
+    </div>
+    <div class="header-badges">
+      <span class="api-badge get" id="headerEndpoint">GET /api/resumen</span>
+    </div>
+  </header>
+
+  <div class="content" id="mainContent">
+    <div class="loading">Cargando datos…</div>
+  </div>
+</main>
+
+<script>
+const fmt = n => "$ " + Number(n).toLocaleString("es-CO");
+
+/* ─────────── NAVEGACIÓN ─────────── */
+let currentSection = null;
+
+function showSection(name) {
+  if (currentSection === name) return;
+  currentSection = name;
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('btn-' + name)?.classList.add('active');
+  sections[name]?.();
+}
+
+function setHeader(title, sub, endpoint) {
+  document.getElementById('headerTitle').textContent    = title;
+  document.getElementById('headerSub').textContent      = sub;
+  document.getElementById('headerEndpoint').textContent = endpoint;
+}
+
+function setContent(html) {
+  document.getElementById('mainContent').innerHTML = html;
+}
+
+async function apiFetch(url) {
+  const r = await fetch(url);
+  if (!r.ok) throw new Error((await r.json()).error || r.statusText);
+  return r.json();
+}
+
+/* ─────────── HELPERS ─────────── */
+function table(cols, rows, renderRow) {
+  if (!rows.length) return `<div class="empty-msg">Sin resultados para mostrar.</div>`;
+  return `<div class="result-wrap">
+    <table>
+      <thead><tr>${cols.map(c => `<th>${c}</th>`).join('')}</tr></thead>
+      <tbody>${rows.map(renderRow).join('')}</tbody>
+    </table>
+  </div>`;
+}
+
+function estadoTag(e) {
+  const map = { pendiente:'yellow', en_proceso:'blue', entregado:'green', cancelado:'red' };
+  return `<span class="tag ${map[e]||'gray'}">${e}</span>`;
+}
+
+function fidelTag(n) {
+  const map = { GOLD:'yellow', SILVER:'gray', BRONZE:'orange' };
+  return `<span class="tag ${map[n]||'gray'}">${n}</span>`;
+}
+
+function stockTag(s) {
+  if (s < 50)  return `<span class="tag red">${s}</span>`;
+  if (s < 100) return `<span class="tag orange">${s}</span>`;
+  return `<span class="tag green">${s}</span>`;
+}
+
+/* ─────────── SECCIONES ─────────── */
+const sections = {
+
+  /* — RESUMEN — */
+  resumen: async () => {
+    setHeader('Resumen general', 'KPIs del sistema en tiempo real', 'GET /api/resumen');
+    setContent('<div class="loading">Cargando…</div>');
+    try {
+      const d = await apiFetch('/api/resumen');
+      setContent(`
+        <div class="kpi-grid">
+          <div class="kpi-card"><div class="kpi-icon purple">📦</div><div class="kpi-info"><strong>${d.totalProductos}</strong><span>Productos</span></div></div>
+          <div class="kpi-card"><div class="kpi-icon green">👥</div><div class="kpi-info"><strong>${d.totalClientes}</strong><span>Clientes</span></div></div>
+          <div class="kpi-card"><div class="kpi-icon orange">🛒</div><div class="kpi-info"><strong>${d.totalOrdenes}</strong><span>Órdenes</span></div></div>
+          <div class="kpi-card"><div class="kpi-icon blue">🏪</div><div class="kpi-info"><strong>${d.totalSucursales}</strong><span>Sucursales</span></div></div>
+          <div class="kpi-card"><div class="kpi-icon red">⚠️</div><div class="kpi-info"><strong>${d.productosConStockCritico}</strong><span>Stock crítico</span></div></div>
+        </div>
+        <div class="resumen-grid">
+          <div class="res-card"><div class="res-label">💰 Ingresos entregados</div><div class="res-val">${d.totalIngresosEntregados}</div></div>
+          <div class="res-card"><div class="res-label">✅ Órdenes entregadas</div><div class="res-val">${d.ventasEntregadas}</div></div>
+          <div class="res-card"><div class="res-label">🏆 Producto más vendido</div><div class="res-val">${d.productoMasVendido}</div></div>
+          <div class="res-card"><div class="res-label">⭐ Cliente con más puntos</div><div class="res-val">${d.clienteConMasPuntos}</div></div>
+        </div>`);
+    } catch(e) { setContent(`<div class="empty-msg">Error: ${e.message}</div>`); }
+  },
+
+  /* — PRODUCTOS — */
+  productos: async () => {
+    setHeader('Todos los productos', 'Catálogo completo', 'GET /api/productos');
+    setContent('<div class="loading">Cargando…</div>');
+    try {
+      const data = await apiFetch('/api/productos');
+      setContent(table(
+        ['ID','Nombre','Categoría','Precio','Stock','Unidad','Proveedor'],
+        data,
+        p => `<tr>
+          <td><code style="color:var(--purple2);font-size:.78rem">${p.id}</code></td>
+          <td>${p.nombre}</td>
+          <td><span class="tag purple">${p.categoria}</span></td>
+          <td style="font-weight:700;color:var(--green)">${fmt(p.precio)}</td>
+          <td>${stockTag(p.stock)}</td>
+          <td style="color:var(--muted2)">${p.unidad}</td>
+          <td style="color:var(--muted2)">${p.proveedor}</td>
+        </tr>`
+      ));
+    } catch(e) { setContent(`<div class="empty-msg">Error: ${e.message}</div>`); }
+  },
+
+  /* — BUSCAR PRODUCTO — */
+  buscar: () => {
+    setHeader('Buscar producto', 'Por nombre, categoría o proveedor', 'GET /api/productos/buscar?termino=');
+    setContent(`
+      <div class="tool-panel">
+        <div class="tool-panel-header">
+          <h3>🔍 Búsqueda de producto</h3>
+          <span class="tool-desc">Ingresa nombre, categoría o proveedor</span>
+        </div>
+        <div class="tool-body">
+          <div class="input-row">
+            <label>Término</label>
+            <input id="inp-termino" type="text" placeholder="Ej: arroz, Lácteos, Alpina…" />
+            <button class="btn" onclick="execBuscar()">Buscar</button>
+          </div>
+          <div id="res-buscar"></div>
+        </div>
+      </div>`);
+  },
+
+  /* — BAJO STOCK — */
+  'bajo-stock': () => {
+    setHeader('Productos bajo stock', 'Filtra por umbral de unidades', 'GET /api/productos/bajo-stock?umbral=');
+    setContent(`
+      <div class="tool-panel">
+        <div class="tool-panel-header">
+          <h3>⚠️ Bajo stock</h3>
+          <span class="tool-desc">Productos con stock menor al umbral</span>
+        </div>
+        <div class="tool-body">
+          <div class="input-row">
+            <label>Umbral</label>
+            <input id="inp-umbral" type="number" value="100" min="1" style="max-width:120px" />
+            <button class="btn" onclick="execBajoStock()">Consultar</button>
+          </div>
+          <div id="res-bajo-stock"></div>
+        </div>
+      </div>`);
+  },
+
+  /* — CLIENTES — */
+  clientes: async () => {
+    setHeader('Todos los clientes', 'Base de clientes registrados', 'GET /api/clientes');
+    setContent('<div class="loading">Cargando…</div>');
+    try {
+      const data = await apiFetch('/api/clientes');
+      setContent(table(
+        ['ID','Nombre','Email','Ciudad','Fidelidad','Puntos','Última compra'],
+        data,
+        c => `<tr>
+          <td><code style="color:var(--purple2);font-size:.78rem">${c.id}</code></td>
+          <td style="font-weight:600">${c.nombre}</td>
+          <td style="color:var(--muted2)">${c.email}</td>
+          <td>${c.ciudad}</td>
+          <td>${fidelTag(c.tarjetaFidelidad)}</td>
+          <td style="font-weight:700;color:var(--yellow)">${c.puntos.toLocaleString('es-CO')}</td>
+          <td style="color:var(--muted2)">${c.ultimaCompra}</td>
+        </tr>`
+      ));
+    } catch(e) { setContent(`<div class="empty-msg">Error: ${e.message}</div>`); }
+  },
+
+  /* — FIDELIDAD — */
+  fidelidad: () => {
+    setHeader('Clientes por fidelidad', 'Filtra por nivel de tarjeta', 'GET /api/clientes/categoria/:nivel');
+    setContent(`
+      <div class="tool-panel">
+        <div class="tool-panel-header">
+          <h3>🏆 Nivel de fidelidad</h3>
+          <span class="tool-desc">GOLD / SILVER / BRONZE</span>
+        </div>
+        <div class="tool-body">
+          <div class="input-row">
+            <label>Nivel</label>
+            <select id="sel-nivel" style="max-width:160px">
+              <option value="GOLD">🥇 GOLD</option>
+              <option value="SILVER">🥈 SILVER</option>
+              <option value="BRONZE">🥉 BRONZE</option>
+            </select>
+            <button class="btn" onclick="execFidelidad()">Consultar</button>
+          </div>
+          <div id="res-fidelidad"></div>
+        </div>
+      </div>`);
+  },
+
+  /* — ORDENES — */
+  ordenes: async () => {
+    setHeader('Todas las órdenes', 'Historial completo de compras', 'GET /api/ordenes');
+    setContent('<div class="loading">Cargando…</div>');
+    try {
+      const data = await apiFetch('/api/ordenes');
+      setContent(table(
+        ['ID','Cliente','Sucursal','Fecha','Estado','Items','Total'],
+        data,
+        o => `<tr>
+          <td><code style="color:var(--purple2);font-size:.78rem">${o.id}</code></td>
+          <td style="color:var(--muted2)">${o.clienteId}</td>
+          <td style="color:var(--muted2)">${o.sucursalId}</td>
+          <td>${o.fecha}</td>
+          <td>${estadoTag(o.estado)}</td>
+          <td style="text-align:center">${o.items.length}</td>
+          <td style="font-weight:700;color:var(--green)">${fmt(o.total)}</td>
+        </tr>`
+      ));
+    } catch(e) { setContent(`<div class="empty-msg">Error: ${e.message}</div>`); }
+  },
+
+  /* — ORDENES POR CLIENTE — */
+  'ord-cli': () => {
+    setHeader('Órdenes por cliente', 'Historial de un cliente específico', 'GET /api/ordenes/cliente/:clienteId');
+    setContent(`
+      <div class="tool-panel">
+        <div class="tool-panel-header">
+          <h3>📄 Órdenes por cliente</h3>
+          <span class="tool-desc">Ingresa el ID del cliente</span>
+        </div>
+        <div class="tool-body">
+          <div class="input-row">
+            <label>ID Cliente</label>
+            <input id="inp-cli-id" type="text" placeholder="Ej: C001" style="max-width:160px" />
+            <button class="btn" onclick="execOrdCli()">Buscar</button>
+          </div>
+          <div id="res-ord-cli"></div>
+        </div>
+      </div>`);
+  },
+
+  /* — ORDENES POR ESTADO — */
+  'ord-estado': () => {
+    setHeader('Órdenes por estado', 'Filtra por estado de la orden', 'GET /api/ordenes/estado/:estado');
+    setContent(`
+      <div class="tool-panel">
+        <div class="tool-panel-header">
+          <h3>📋 Órdenes por estado</h3>
+          <span class="tool-desc">Selecciona el estado a consultar</span>
+        </div>
+        <div class="tool-body">
+          <div class="input-row">
+            <label>Estado</label>
+            <select id="sel-estado" style="max-width:180px">
+              <option value="pendiente">🕐 Pendiente</option>
+              <option value="en_proceso">🔄 En proceso</option>
+              <option value="entregado">✅ Entregado</option>
+              <option value="cancelado">❌ Cancelado</option>
+            </select>
+            <button class="btn" onclick="execOrdEstado()">Consultar</button>
+          </div>
+          <div id="res-ord-estado"></div>
+        </div>
+      </div>`);
+  },
+
+  /* — CATEGORÍAS — */
+  categorias: async () => {
+    setHeader('Todas las categorías', 'Jerarquía completa: padres y subcategorías', 'GET /api/categorias');
+    setContent('<div class="loading">Cargando…</div>');
+    try {
+      const data = await apiFetch('/api/categorias');
+      const padres  = data.filter(c => c.padre === null);
+      const hijos   = data.filter(c => c.padre !== null);
+      let html = '';
+      padres.forEach(p => {
+        const subs = hijos.filter(h => h.padre === p.id);
+        html += `
+          <div class="tool-panel" style="margin-bottom:16px">
+            <div class="tool-panel-header">
+              <h3>📂 ${p.nombre} <span style="font-size:.75rem;color:var(--muted);font-weight:400">${p.id}</span></h3>
+              <span class="tool-desc">${p.descripcion}</span>
+            </div>
+            <div class="result-wrap">
+              <table>
+                <thead><tr><th>ID</th><th>Subcategoría</th><th>Descripción</th></tr></thead>
+                <tbody>${subs.map(s => `
+                  <tr>
+                    <td><code style="color:var(--purple2);font-size:.78rem">${s.id}</code></td>
+                    <td style="font-weight:600">${s.nombre}</td>
+                    <td style="color:var(--muted2);font-size:.82rem">${s.descripcion}</td>
+                  </tr>`).join('')}</tbody>
+              </table>
+            </div>
+          </div>`;
+      });
+      setContent(html);
+    } catch(e) { setContent(`<div class="empty-msg">Error: ${e.message}</div>`); }
+  },
+
+  /* — PRODUCTOS POR CATEGORÍA — */
+  'cat-detalle': async () => {
+    setHeader('Productos por categoría', 'Filtros: precio, stock y ordenamiento', 'GET /api/productos/categoria/:id');
+    setContent('<div class="loading">Cargando categorías…</div>');
+
+    // Cargar categorías para el selector
+    let cats = [];
+    try { cats = await apiFetch('/api/categorias'); } catch(e) {}
+
+    const padres = cats.filter(c => c.padre === null);
+    const hijos  = cats.filter(c => c.padre !== null);
+
+    // Construir options agrupadas
+    const opts = padres.map(p => {
+      const subs = hijos.filter(h => h.padre === p.id);
+      const subOpts = subs.map(s => `<option value="${s.id}">${s.nombre} (${s.id})</option>`).join('');
+      return `<optgroup label="${p.nombre}">${subOpts}</optgroup>`;
+    }).join('');
+
+    setContent(`
+      <div class="tool-panel">
+        <div class="tool-panel-header">
+          <h3>🏷️ Consulta de productos por categoría</h3>
+          <span class="tool-desc">Selecciona categoría, aplica filtros y ordena el resultado</span>
+        </div>
+        <div class="tool-body">
+
+          <!-- Fila 1: Categoría + subcategorías -->
+          <div class="input-row">
+            <label>Categoría</label>
+            <select id="sel-cat" style="min-width:240px">
+              <option value="">— Selecciona una categoría —</option>
+              ${opts}
+            </select>
+            <label style="display:flex;align-items:center;gap:6px;min-width:auto;cursor:pointer">
+              <input type="checkbox" id="chk-sub" style="width:14px;height:14px" />
+              <span>Incluir subcategorías</span>
+            </label>
+          </div>
+
+          <!-- Fila 2: Precio y stock -->
+          <div class="input-row">
+            <label>Precio mín.</label>
+            <input id="inp-precio-min" type="number" min="0" placeholder="Ej: 5000" style="max-width:140px" />
+            <label>Precio máx.</label>
+            <input id="inp-precio-max" type="number" min="0" placeholder="Ej: 50000" style="max-width:140px" />
+            <label>Stock mín.</label>
+            <input id="inp-stock-min" type="number" min="0" placeholder="Ej: 100" style="max-width:120px" />
+          </div>
+
+          <!-- Fila 3: Ordenar + botón -->
+          <div class="input-row">
+            <label>Ordenar por</label>
+            <select id="sel-ordenar" style="max-width:220px">
+              <option value="nombre_asc">Nombre A → Z</option>
+              <option value="nombre_desc">Nombre Z → A</option>
+              <option value="precio_asc">Precio menor primero</option>
+              <option value="precio_desc">Precio mayor primero</option>
+              <option value="stock_asc">Stock menor primero</option>
+              <option value="stock_desc">Stock mayor primero</option>
+            </select>
+            <button class="btn" onclick="execCatDetalle()">🔍 Consultar</button>
+          </div>
+
+          <div id="res-cat-detalle"></div>
+        </div>
+      </div>`);
+  },
+
+  /* — SUCURSALES — */
+  sucursales: async () => {
+    setHeader('Todas las sucursales', 'Red de puntos de venta', 'GET /api/sucursales');
+    setContent('<div class="loading">Cargando…</div>');
+    try {
+      const data = await apiFetch('/api/sucursales');
+      setContent(table(
+        ['ID','Nombre','Ciudad','Dirección','Tipo','Empleados','Horario'],
+        data,
+        s => `<tr>
+          <td><code style="color:var(--purple2);font-size:.78rem">${s.id}</code></td>
+          <td style="font-weight:600">${s.nombre}</td>
+          <td>${s.ciudad}</td>
+          <td style="color:var(--muted2);font-size:.8rem">${s.direccion}</td>
+          <td><span class="tag ${s.tipo==='Híper'?'green':'blue'}">${s.tipo}</span></td>
+          <td style="text-align:center">${s.empleados}</td>
+          <td style="color:var(--muted2)">${s.horario}</td>
+        </tr>`
+      ));
+    } catch(e) { setContent(`<div class="empty-msg">Error: ${e.message}</div>`); }
+  },
+
+  /* — SUCURSALES POR CIUDAD — */
+  'suc-ciudad': () => {
+    setHeader('Sucursales por ciudad', 'Filtra sucursales por ciudad', 'GET /api/sucursales/ciudad/:ciudad');
+    setContent(`
+      <div class="tool-panel">
+        <div class="tool-panel-header">
+          <h3>🌆 Sucursal por ciudad</h3>
+          <span class="tool-desc">Ingresa el nombre de la ciudad</span>
+        </div>
+        <div class="tool-body">
+          <div class="input-row">
+            <label>Ciudad</label>
+            <input id="inp-ciudad" type="text" placeholder="Ej: Bogotá, Medellín…" style="max-width:220px" />
+            <button class="btn" onclick="execSucCiudad()">Buscar</button>
+          </div>
+          <div id="res-suc-ciudad"></div>
+        </div>
+      </div>`);
+  },
+};
+
+/* ─────────── EJECUTORES ─────────── */
+
+async function execBuscar() {
+  const t = document.getElementById('inp-termino').value.trim();
+  if (!t) return;
+  const el = document.getElementById('res-buscar');
+  el.innerHTML = '<div class="loading">Buscando…</div>';
+  try {
+    const data = await apiFetch(`/api/productos/buscar?termino=${encodeURIComponent(t)}`);
+    el.innerHTML = table(
+      ['ID','Nombre','Categoría','Precio','Stock'],
+      data,
+      p => `<tr>
+        <td><code style="color:var(--purple2);font-size:.78rem">${p.id}</code></td>
+        <td>${p.nombre}</td>
+        <td><span class="tag purple">${p.categoria}</span></td>
+        <td style="font-weight:700;color:var(--green)">${fmt(p.precio)}</td>
+        <td>${stockTag(p.stock)}</td>
+      </tr>`
+    );
+  } catch(e) { el.innerHTML = `<div class="empty-msg">Error: ${e.message}</div>`; }
+}
+
+async function execBajoStock() {
+  const u = document.getElementById('inp-umbral').value || 100;
+  const el = document.getElementById('res-bajo-stock');
+  el.innerHTML = '<div class="loading">Consultando…</div>';
+  try {
+    const data = await apiFetch(`/api/productos/bajo-stock?umbral=${u}`);
+    el.innerHTML = table(
+      ['ID','Nombre','Categoría','Stock','Precio'],
+      data,
+      p => `<tr>
+        <td><code style="color:var(--purple2);font-size:.78rem">${p.id}</code></td>
+        <td>${p.nombre}</td>
+        <td><span class="tag purple">${p.categoria}</span></td>
+        <td>${stockTag(p.stock)}</td>
+        <td style="font-weight:700;color:var(--green)">${fmt(p.precio)}</td>
+      </tr>`
+    );
+  } catch(e) { el.innerHTML = `<div class="empty-msg">Error: ${e.message}</div>`; }
+}
+
+async function execFidelidad() {
+  const n = document.getElementById('sel-nivel').value;
+  const el = document.getElementById('res-fidelidad');
+  el.innerHTML = '<div class="loading">Consultando…</div>';
+  try {
+    const data = await apiFetch(`/api/clientes/categoria/${n}`);
+    el.innerHTML = table(
+      ['ID','Nombre','Email','Ciudad','Puntos'],
+      data,
+      c => `<tr>
+        <td><code style="color:var(--purple2);font-size:.78rem">${c.id}</code></td>
+        <td style="font-weight:600">${c.nombre}</td>
+        <td style="color:var(--muted2)">${c.email}</td>
+        <td>${c.ciudad}</td>
+        <td style="font-weight:700;color:var(--yellow)">${c.puntos.toLocaleString('es-CO')}</td>
+      </tr>`
+    );
+  } catch(e) { el.innerHTML = `<div class="empty-msg">Error: ${e.message}</div>`; }
+}
+
+async function execOrdCli() {
+  const id = document.getElementById('inp-cli-id').value.trim();
+  if (!id) return;
+  const el = document.getElementById('res-ord-cli');
+  el.innerHTML = '<div class="loading">Buscando…</div>';
+  try {
+    const data = await apiFetch(`/api/ordenes/cliente/${encodeURIComponent(id)}`);
+    el.innerHTML = table(
+      ['ID','Sucursal','Fecha','Estado','Items','Total'],
+      data,
+      o => `<tr>
+        <td><code style="color:var(--purple2);font-size:.78rem">${o.id}</code></td>
+        <td style="color:var(--muted2)">${o.sucursalId}</td>
+        <td>${o.fecha}</td>
+        <td>${estadoTag(o.estado)}</td>
+        <td style="text-align:center">${o.items.length}</td>
+        <td style="font-weight:700;color:var(--green)">${fmt(o.total)}</td>
+      </tr>`
+    );
+  } catch(e) { el.innerHTML = `<div class="empty-msg">Error: ${e.message}</div>`; }
+}
+
+async function execOrdEstado() {
+  const e = document.getElementById('sel-estado').value;
+  const el = document.getElementById('res-ord-estado');
+  el.innerHTML = '<div class="loading">Consultando…</div>';
+  try {
+    const data = await apiFetch(`/api/ordenes/estado/${e}`);
+    el.innerHTML = table(
+      ['ID','Cliente','Sucursal','Fecha','Items','Total'],
+      data,
+      o => `<tr>
+        <td><code style="color:var(--purple2);font-size:.78rem">${o.id}</code></td>
+        <td style="color:var(--muted2)">${o.clienteId}</td>
+        <td style="color:var(--muted2)">${o.sucursalId}</td>
+        <td>${o.fecha}</td>
+        <td style="text-align:center">${o.items.length}</td>
+        <td style="font-weight:700;color:var(--green)">${fmt(o.total)}</td>
+      </tr>`
+    );
+  } catch(e2) { el.innerHTML = `<div class="empty-msg">Error: ${e2.message}</div>`; }
+}
+
+async function execSucCiudad() {
+  const c = document.getElementById('inp-ciudad').value.trim();
+  if (!c) return;
+  const el = document.getElementById('res-suc-ciudad');
+  el.innerHTML = '<div class="loading">Buscando…</div>';
+  try {
+    const data = await apiFetch(`/api/sucursales/ciudad/${encodeURIComponent(c)}`);
+    el.innerHTML = table(
+      ['ID','Nombre','Dirección','Tipo','Empleados','Horario'],
+      data,
+      s => `<tr>
+        <td><code style="color:var(--purple2);font-size:.78rem">${s.id}</code></td>
+        <td style="font-weight:600">${s.nombre}</td>
+        <td style="color:var(--muted2);font-size:.8rem">${s.direccion}</td>
+        <td><span class="tag ${s.tipo==='Híper'?'green':'blue'}">${s.tipo}</span></td>
+        <td style="text-align:center">${s.empleados}</td>
+        <td style="color:var(--muted2)">${s.horario}</td>
+      </tr>`
+    );
+  } catch(e) { el.innerHTML = `<div class="empty-msg">Error: ${e.message}</div>`; }
+}
+
+async function execCatDetalle() {
+  const catId = (document.getElementById('sel-cat')?.value ?? '').toUpperCase();
+  if (!catId) { document.getElementById('res-cat-detalle').innerHTML = '<div class="empty-msg">Selecciona una categoría para continuar.</div>'; return; }
+
+  const el = document.getElementById('res-cat-detalle');
+  el.innerHTML = '<div class="loading">Consultando…</div>';
+
+  const params = new URLSearchParams();
+  const precioMin = document.getElementById('inp-precio-min')?.value;
+  const precioMax = document.getElementById('inp-precio-max')?.value;
+  const stockMin  = document.getElementById('inp-stock-min')?.value;
+  const ordenar   = document.getElementById('sel-ordenar')?.value  ?? 'nombre_asc';
+  const incluirSub = document.getElementById('chk-sub')?.checked;
+
+  if (precioMin) params.set('precio_min', precioMin);
+  if (precioMax) params.set('precio_max', precioMax);
+  if (stockMin)  params.set('stock_min',  stockMin);
+  params.set('ordenar', ordenar);
+  if (incluirSub) params.set('incluir_sub', 'true');
+
+  const url = `/api/productos/categoria/${encodeURIComponent(catId)}?${params.toString()}`;
+  document.getElementById('headerEndpoint').textContent = `GET ${url}`;
+
+  try {
+    const data = await apiFetch(url);
+    const cat   = data.categoria;
+    const prods = data.productos || [];
+
+    const filtrosActivos = Object.entries(data.filtros)
+      .filter(([k, v]) => v !== null && v !== false && k !== 'ordenar')
+      .map(([k, v]) => `<span class="tag purple" style="margin-right:6px">${k}: ${v}</span>`).join('');
+
+    el.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0 14px;flex-wrap:wrap;gap:8px">
+        <div>
+          <strong style="color:var(--purple2);font-size:1rem">${cat.nombre}</strong>
+          ${cat.padre ? `<span class="tag blue" style="margin-left:8px">Sub de: ${cat.padre}</span>` : '<span class="tag green" style="margin-left:8px">Principal</span>'}
+          <span style="color:var(--muted);font-size:.8rem;margin-left:10px">${cat.descripcion}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:.82rem">
+          ${filtrosActivos}
+          <span class="tag ${prods.length > 0 ? 'green' : 'red'}">${prods.length} resultado${prods.length !== 1 ? 's' : ''}</span>
+        </div>
+      </div>` +
+      table(
+        ['ID','Nombre','Categoría','Precio','Stock','Unidad','Proveedor'],
+        prods,
+        p => `<tr>
+          <td><code style="color:var(--purple2);font-size:.78rem">${p.id}</code></td>
+          <td style="font-weight:600">${p.nombre}</td>
+          <td><span class="tag purple" style="font-size:.7rem">${p.categoria}</span></td>
+          <td style="font-weight:700;color:var(--green)">${fmt(p.precio)}</td>
+          <td>${stockTag(p.stock)}</td>
+          <td style="color:var(--muted2)">${p.unidad}</td>
+          <td style="color:var(--muted2)">${p.proveedor}</td>
+        </tr>`
+      );
+  } catch(e) { el.innerHTML = `<div class="empty-msg">Error: ${e.message}</div>`; }
+}
+
+/* ─────────── ENTER KEY ─────────── */
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Enter') return;
+  const id = document.activeElement?.id;
+  if (id === 'inp-termino')  execBuscar();
+  if (id === 'inp-umbral')   execBajoStock();
+  if (id === 'inp-cli-id')   execOrdCli();
+  if (id === 'inp-ciudad')   execSucCiudad();
+});
+
+/* ─────────── INICIO ─────────── */
+showSection('resumen');
+</script>
+</body>
+</html>

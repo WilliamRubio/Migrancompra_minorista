@@ -1,0 +1,16 @@
+{
+  "name": "proyectomcp",
+  "version": "1.0.0",
+  "description": "Servidor MCP que simula la base de datos de una empresa minorista (tipo Éxito)",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "web": "node src/http-server.js",
+    "web:dev": "node --watch src/http-server.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.10.1"
+  }
+}
