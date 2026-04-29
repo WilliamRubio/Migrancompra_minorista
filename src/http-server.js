@@ -2,6 +2,9 @@ import express from "express";
 import path from "path";
 import { fileURLToPath } from "url";
 import { scryptSync, randomBytes, timingSafeEqual } from "crypto";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
+import { z } from "zod";
 
 import { productos } from "./data/productos.js";
 import { clientes } from "./data/clientes.js";
@@ -13,7 +16,11 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const PORT = 3000;
+const PORT = parseInt(process.env.PORT) || 3000;
+const IS_PROD = process.env.NODE_ENV === "production";
+
+// Confiar en el proxy inverso de Railway/Render para HTTPS
+if (IS_PROD) app.set("trust proxy", 1);
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "../public"), { etag: false, lastModified: false }));
@@ -96,7 +103,7 @@ app.post("/api/auth/registro", (req, res) => {
 
   const token = randomBytes(32).toString("hex");
   sessions[token] = user.id;
-  res.cookie("mgc_session", token, { httpOnly: true, sameSite: "strict", maxAge: 7 * 24 * 60 * 60 * 1000 });
+  res.cookie("mgc_session", token, { httpOnly: true, secure: IS_PROD, sameSite: "strict", maxAge: 7 * 24 * 60 * 60 * 1000 });
   const { passwordHash: _, ...pub } = user;
   res.status(201).json({ usuario: pub });
 });
@@ -112,7 +119,7 @@ app.post("/api/auth/login", (req, res) => {
 
   const token = randomBytes(32).toString("hex");
   sessions[token] = user.id;
-  res.cookie("mgc_session", token, { httpOnly: true, sameSite: "strict", maxAge: 7 * 24 * 60 * 60 * 1000 });
+  res.cookie("mgc_session", token, { httpOnly: true, secure: IS_PROD, sameSite: "strict", maxAge: 7 * 24 * 60 * 60 * 1000 });
   const { passwordHash: _, ...pub } = user;
   res.json({ usuario: pub });
 });
@@ -615,6 +622,161 @@ app.get("/api/resumen", (req, res) => {
   });
 });
 
+// ─── MCP: servidor de herramientas (Streamable HTTP, modo sin estado) ────────
+
+function crearMcpServer() {
+  const mcpServer = new McpServer({
+    name: "minorista-mcp",
+    version: "1.0.0",
+    description: "Base de datos simulada de una empresa minorista tipo Éxito",
+  });
+
+  mcpServer.tool("listar_productos", "Lista todos los productos del catálogo", {}, async () => ({
+    content: [{ type: "text", text: JSON.stringify(productos, null, 2) }],
+  }));
+
+  mcpServer.tool("buscar_producto", "Busca productos por nombre o categoría",
+    { termino: z.string().describe("Nombre o categoría a buscar") },
+    async ({ termino }) => {
+      const t = termino.toLowerCase();
+      const resultado = productos.filter(p =>
+        p.nombre.toLowerCase().includes(t) ||
+        p.categoriaId?.toLowerCase().includes(t) ||
+        p.proveedor.toLowerCase().includes(t)
+      );
+      return { content: [{ type: "text", text: resultado.length
+        ? JSON.stringify(resultado, null, 2)
+        : `No se encontraron productos con el término "${termino}"` }] };
+    }
+  );
+
+  mcpServer.tool("obtener_producto", "Obtiene el detalle de un producto por su ID",
+    { id: z.string().describe("ID del producto (ej: P001)") },
+    async ({ id }) => {
+      const producto = productos.find(p => p.id === id.toUpperCase());
+      return { content: [{ type: "text", text: producto
+        ? JSON.stringify(enriquecerProducto(producto), null, 2)
+        : `Producto con ID "${id}" no encontrado` }] };
+    }
+  );
+
+  mcpServer.tool("productos_bajo_stock", "Lista los productos con stock por debajo de un umbral",
+    { umbral: z.number().int().min(1).describe("Cantidad mínima de stock (ej: 100)") },
+    async ({ umbral }) => {
+      const resultado = productos.filter(p => p.stock < umbral).sort((a, b) => a.stock - b.stock);
+      return { content: [{ type: "text", text: resultado.length
+        ? JSON.stringify(resultado, null, 2)
+        : `Todos los productos tienen stock mayor a ${umbral}` }] };
+    }
+  );
+
+  mcpServer.tool("listar_clientes", "Lista todos los clientes registrados", {}, async () => ({
+    content: [{ type: "text", text: JSON.stringify(clientes, null, 2) }],
+  }));
+
+  mcpServer.tool("obtener_cliente", "Obtiene el detalle de un cliente por su ID",
+    { id: z.string().describe("ID del cliente (ej: C001)") },
+    async ({ id }) => {
+      const cliente = clientes.find(c => c.id === id.toUpperCase());
+      return { content: [{ type: "text", text: cliente
+        ? JSON.stringify(cliente, null, 2)
+        : `Cliente con ID "${id}" no encontrado` }] };
+    }
+  );
+
+  mcpServer.tool("clientes_por_categoria", "Lista los clientes según su nivel de tarjeta de fidelidad",
+    { nivel: z.enum(["GOLD", "SILVER", "BRONZE"]).describe("Nivel de tarjeta: GOLD, SILVER o BRONZE") },
+    async ({ nivel }) => {
+      const resultado = clientes.filter(c => c.tarjetaFidelidad === nivel);
+      return { content: [{ type: "text", text: JSON.stringify(resultado, null, 2) }] };
+    }
+  );
+
+  mcpServer.tool("listar_sucursales", "Lista todas las sucursales de la empresa", {}, async () => ({
+    content: [{ type: "text", text: JSON.stringify(sucursales, null, 2) }],
+  }));
+
+  mcpServer.tool("sucursales_por_ciudad", "Lista las sucursales de una ciudad específica",
+    { ciudad: z.string().describe("Nombre de la ciudad (ej: Bogotá, Medellín)") },
+    async ({ ciudad }) => {
+      const resultado = sucursales.filter(s => s.ciudad.toLowerCase().includes(ciudad.toLowerCase()));
+      return { content: [{ type: "text", text: resultado.length
+        ? JSON.stringify(resultado, null, 2)
+        : `No hay sucursales en "${ciudad}"` }] };
+    }
+  );
+
+  mcpServer.tool("listar_ordenes", "Lista todas las órdenes de compra", {}, async () => ({
+    content: [{ type: "text", text: JSON.stringify(ordenes, null, 2) }],
+  }));
+
+  mcpServer.tool("ordenes_por_cliente", "Lista las órdenes de un cliente específico",
+    { clienteId: z.string().describe("ID del cliente (ej: C001)") },
+    async ({ clienteId }) => {
+      const resultado = ordenes.filter(o => o.clienteId === clienteId.toUpperCase());
+      return { content: [{ type: "text", text: resultado.length
+        ? JSON.stringify(resultado, null, 2)
+        : `No se encontraron órdenes para el cliente "${clienteId}"` }] };
+    }
+  );
+
+  mcpServer.tool("ordenes_por_estado", "Lista las órdenes filtradas por estado",
+    { estado: z.enum(["pendiente", "en_proceso", "entregado", "cancelado"]).describe("Estado de la orden") },
+    async ({ estado }) => {
+      const resultado = ordenes.filter(o => o.estado === estado);
+      return { content: [{ type: "text", text: resultado.length
+        ? JSON.stringify(resultado, null, 2)
+        : `No hay órdenes con estado "${estado}"` }] };
+    }
+  );
+
+  mcpServer.tool("listar_categorias", "Lista todas las categorías de productos", {}, async () => ({
+    content: [{ type: "text", text: JSON.stringify(categorias, null, 2) }],
+  }));
+
+  mcpServer.tool("resumen_negocio", "Muestra un resumen general del estado del negocio", {},
+    async () => {
+      const totalVentas = ordenes.filter(o => o.estado === "entregado").reduce((s, o) => s + o.total, 0);
+      const conteo = {};
+      ordenes.forEach(o => o.items.forEach(i => { conteo[i.productoId] = (conteo[i.productoId] || 0) + i.cantidad; }));
+      const topId = Object.entries(conteo).sort((a, b) => b[1] - a[1])[0][0];
+      const productoMasVendido = productos.find(p => p.id === topId);
+      const clienteTopPuntos = clientes.slice().sort((a, b) => b.puntos - a.puntos)[0];
+      return { content: [{ type: "text", text: JSON.stringify({
+        totalProductos: productos.length, totalClientes: clientes.length,
+        totalSucursales: sucursales.length, totalOrdenes: ordenes.length,
+        ventasEntregadas: ordenes.filter(o => o.estado === "entregado").length,
+        totalIngresosEntregados: `$${totalVentas.toLocaleString("es-CO")} COP`,
+        productoMasVendido: productoMasVendido?.nombre,
+        clienteConMasPuntos: `${clienteTopPuntos.nombre} (${clienteTopPuntos.puntos} puntos)`,
+        productosConStockCritico: productos.filter(p => p.stock < 100).length,
+      }, null, 2) }] };
+    }
+  );
+
+  return mcpServer;
+}
+
+// POST /mcp  → recibe llamadas de herramientas (modo sin estado)
+app.post("/mcp", async (req, res) => {
+  try {
+    const mcpServer = crearMcpServer();
+    const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
+    res.on("finish", () => mcpServer.close());
+    await mcpServer.connect(transport);
+    await transport.handleRequest(req, res, req.body);
+  } catch (err) {
+    console.error("[MCP] Error:", err);
+    if (!res.headersSent) res.status(500).json({ error: "Error interno del servidor MCP" });
+  }
+});
+
+// GET /mcp  → SSE (para clientes que usen streaming)
+app.get("/mcp", async (req, res) => {
+  res.status(405).json({ error: "Usa POST /mcp para enviar mensajes MCP" });
+});
+
 app.listen(PORT, () => {
-  console.log(`\n  Interfaz web disponible en → http://localhost:${PORT}\n`);
+  console.log(`\n  Interfaz web  → http://localhost:${PORT}`);
+  console.log(`  MCP endpoint → http://localhost:${PORT}/mcp\n`);
 });

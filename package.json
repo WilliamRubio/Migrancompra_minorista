@@ -5,12 +5,17 @@
   "type": "module",
   "main": "src/index.js",
   "scripts": {
-    "start": "node src/index.js",
-    "dev": "node --watch src/index.js",
-    "web": "node src/http-server.js",
-    "web:dev": "node --watch src/http-server.js"
+    "start": "node src/http-server.js",
+    "dev": "node --watch src/http-server.js",
+    "mcp:stdio": "node src/index.js",
+    "mcp:stdio:dev": "node --watch src/index.js"
+  },
+  "engines": {
+    "node": ">=20"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.10.1"
+    "@modelcontextprotocol/sdk": "^1.10.1",
+    "express": "^4.21.2",
+    "zod": "^3.24.2"
   }
 }
