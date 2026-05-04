@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Arquitectura – ProyectoMCP</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', sans-serif; background: #0f172a; color: #e2e8f0; padding: 32px; }
+    h1 { font-size: 1.8rem; color: #38bdf8; margin-bottom: 4px; }
+    .subtitle { color: #94a3b8; font-size: 0.95rem; margin-bottom: 36px; }
+
+    /* ── GRID PRINCIPAL ── */
+    .arch { display: flex; flex-direction: column; gap: 28px; }
+
+    /* ── CAPA ── */
+    .layer { border: 1px solid #334155; border-radius: 12px; padding: 20px 24px; }
+    .layer-title {
+      font-size: 0.72rem; font-weight: 700; letter-spacing: .1em;
+      text-transform: uppercase; color: #64748b; margin-bottom: 16px;
+    }
+    .boxes { display: flex; flex-wrap: wrap; gap: 14px; }
+
+    /* ── BOX ── */
+    .box {
+      border-radius: 8px; padding: 14px 18px; min-width: 160px;
+      flex: 1 1 160px; max-width: 260px;
+    }
+    .box-title { font-size: 0.85rem; font-weight: 700; margin-bottom: 4px; }
+    .box-desc  { font-size: 0.75rem; color: #94a3b8; line-height: 1.45; }
+    .tag { display: inline-block; font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; margin-top: 6px; font-weight: 600; }
+
+    /* colores por capa */
+    .blue   { background: #0c2a4a; border: 1px solid #0ea5e9; }
+    .blue   .box-title { color: #38bdf8; }
+    .blue   .tag { background:#0ea5e920; color:#38bdf8; }
+
+    .green  { background: #0a2e1f; border: 1px solid #22c55e; }
+    .green  .box-title { color: #4ade80; }
+    .green  .tag { background:#22c55e20; color:#4ade80; }
+
+    .purple { background: #1e1040; border: 1px solid #a855f7; }
+    .purple .box-title { color: #c084fc; }
+    .purple .tag { background:#a855f720; color:#c084fc; }
+
+    .orange { background: #2d1b00; border: 1px solid #f97316; }
+    .orange .box-title { color: #fb923c; }
+    .orange .tag { background:#f9731620; color:#fb923c; }
+
+    .slate  { background: #1e293b; border: 1px solid #475569; }
+    .slate  .box-title { color: #cbd5e1; }
+    .slate  .tag { background:#47556920; color:#cbd5e1; }
+
+    /* ── FLECHAS ── */
+    .arrow {
+      text-align: center; color: #475569; font-size: 1.4rem; line-height: 1;
+      margin: -10px 0;
+    }
+
+    /* ── TABLA DE DATOS ── */
+    table { width: 100%; border-collapse: collapse; font-size: 0.8rem; margin-top: 8px; }
+    th { background: #1e293b; color: #94a3b8; padding: 6px 10px; text-align: left; font-weight: 600; }
+    td { padding: 5px 10px; border-bottom: 1px solid #1e293b; color: #cbd5e1; }
+    tr:last-child td { border-bottom: none; }
+
+    /* ── FOOTER ── */
+    footer { margin-top: 40px; font-size: 0.72rem; color: #475569; text-align: center; }
+  </style>
+</head>
+<body>
+
+<h1>ProyectoMCP — Arquitectura del Sistema</h1>
+<p class="subtitle">Servidor MCP · Empresa minorista simulada · Node.js 20+ · Mayo 2026</p>
+
+<div class="arch">
+
+  <!-- CAPA 1: CLIENTES -->
+  <div class="layer">
+    <div class="layer-title">Capa de Clientes / Interfaces</div>
+    <div class="boxes">
+      <div class="box blue">
+        <div class="box-title">Navegador Web</div>
+        <div class="box-desc">Accede a las páginas estáticas servidas por Express.<br>
+          <code style="font-size:.72rem;color:#7dd3fc">index.html · catalogo.html · panel.html</code>
+        </div>
+        <span class="tag">HTTP / Browser</span>
+      </div>
+      <div class="box blue">
+        <div class="box-title">AI Agent / MCP Client</div>
+        <div class="box-desc">LLMs (Claude, Copilot, etc.) que consumen el servidor vía protocolo MCP sobre HTTP SSE o stdio.</div>
+        <span class="tag">MCP Protocol</span>
+      </div>
+      <div class="box blue">
+        <div class="box-title">CLI / stdio</div>
+        <div class="box-desc">Uso directo del servidor MCP en modo stdio para integraciones locales o pipelines de CI.</div>
+        <span class="tag">stdio transport</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow">↓</div>
+
+  <!-- CAPA 2: SERVIDOR -->
+  <div class="layer">
+    <div class="layer-title">Capa de Servidor</div>
+    <div class="boxes">
+      <div class="box green">
+        <div class="box-title">http-server.js</div>
+        <div class="box-desc">Servidor Express. Expone REST API, páginas estáticas, autenticación con sesiones y carrito de compras. Monta el transporte MCP sobre HTTP (StreamableHTTP).</div>
+        <span class="tag">Express 4</span>
+        <span class="tag">MCP/HTTP</span>
+      </div>
+      <div class="box green">
+        <div class="box-title">index.js</div>
+        <div class="box-desc">Servidor MCP puro sobre transporte stdio. Registra todas las herramientas MCP. Utilizado en modo desarrollo y CLI.</div>
+        <span class="tag">MCP SDK</span>
+        <span class="tag">stdio</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow">↓</div>
+
+  <!-- CAPA 3: LÓGICA / HERRAMIENTAS MCP -->
+  <div class="layer">
+    <div class="layer-title">Herramientas MCP Registradas</div>
+    <div class="boxes">
+      <div class="box purple">
+        <div class="box-title">Productos</div>
+        <div class="box-desc">listar_productos · buscar_producto · obtener_producto · verificar_stock · productos_por_categoria</div>
+        <span class="tag">tool</span>
+      </div>
+      <div class="box purple">
+        <div class="box-title">Clientes</div>
+        <div class="box-desc">listar_clientes · buscar_cliente · obtener_cliente · historial_compras · fidelidad_cliente</div>
+        <span class="tag">tool</span>
+      </div>
+      <div class="box purple">
+        <div class="box-title">Órdenes</div>
+        <div class="box-desc">listar_ordenes · obtener_orden · ordenes_por_cliente · ordenes_por_estado · resumen_ventas</div>
+        <span class="tag">tool</span>
+      </div>
+      <div class="box purple">
+        <div class="box-title">Sucursales</div>
+        <div class="box-desc">listar_sucursales · obtener_sucursal · sucursales_por_ciudad</div>
+        <span class="tag">tool</span>
+      </div>
+      <div class="box purple">
+        <div class="box-title">Categorías</div>
+        <div class="box-desc">listar_categorias · obtener_categoria</div>
+        <span class="tag">tool</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow">↓</div>
+
+  <!-- CAPA 4: API REST (Express) -->
+  <div class="layer">
+    <div class="layer-title">API REST (Express) — Endpoints HTTP</div>
+    <div class="boxes">
+      <div class="box orange">
+        <div class="box-title">Auth</div>
+        <div class="box-desc">POST /api/auth/registro<br>POST /api/auth/login<br>POST /api/auth/logout<br>GET /api/auth/me</div>
+        <span class="tag">Sesiones en memoria</span>
+      </div>
+      <div class="box orange">
+        <div class="box-title">Carrito</div>
+        <div class="box-desc">GET /api/carrito<br>POST /api/carrito/agregar<br>DELETE /api/carrito/quitar<br>POST /api/carrito/checkout</div>
+        <span class="tag">In-memory store</span>
+      </div>
+      <div class="box orange">
+        <div class="box-title">MCP / SSE</div>
+        <div class="box-desc">POST /mcp<br>GET /mcp (SSE)<br>DELETE /mcp</div>
+        <span class="tag">StreamableHTTP</span>
+      </div>
+      <div class="box orange">
+        <div class="box-title">Estáticos</div>
+        <div class="box-desc">GET / → index.html<br>GET /catalogo.html<br>GET /panel.html</div>
+        <span class="tag">Express static</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow">↓</div>
+
+  <!-- CAPA 5: DATOS -->
+  <div class="layer">
+    <div class="layer-title">Capa de Datos (In-Memory / Archivos JS)</div>
+    <div class="boxes">
+      <div class="box slate">
+        <div class="box-title">productos.js</div>
+        <div class="box-desc">Catálogo completo con ID, nombre, categoríaId, precio, stock, unidad y proveedor.</div>
+      </div>
+      <div class="box slate">
+        <div class="box-title">clientes.js</div>
+        <div class="box-desc">Clientes con ID, nombre, email, tarjeta de fidelidad y puntos acumulados.</div>
+      </div>
+      <div class="box slate">
+        <div class="box-title">ordenes.js</div>
+        <div class="box-desc">Historial de órdenes con estado, ítems, cliente, sucursal y totales.</div>
+      </div>
+      <div class="box slate">
+        <div class="box-title">sucursales.js</div>
+        <div class="box-desc">Sucursales con ciudad, dirección y horarios.</div>
+      </div>
+      <div class="box slate">
+        <div class="box-title">categorias.js</div>
+        <div class="box-desc">Árbol de categorías con ID y nombre legible.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow">↓</div>
+
+  <!-- CAPA 6: INFRAESTRUCTURA -->
+  <div class="layer">
+    <div class="layer-title">Infraestructura / Despliegue</div>
+    <div class="boxes">
+      <div class="box blue">
+        <div class="box-title">Railway</div>
+        <div class="box-desc">Plataforma de hosting. Build con Nixpacks. Start: <code style="font-size:.72rem">node src/http-server.js</code>. Restart on failure (max 3 reintentos).</div>
+        <span class="tag">railway.toml</span>
+        <span class="tag">NODE_ENV=production</span>
+      </div>
+      <div class="box blue">
+        <div class="box-title">Node.js 20+</div>
+        <div class="box-desc">Runtime requerido. ES Modules (type: module). Sin base de datos externa — estado completamente en memoria.</div>
+        <span class="tag">ESM</span>
+      </div>
+      <div class="box blue">
+        <div class="box-title">Dependencias clave</div>
+        <div class="box-desc">
+          <code style="font-size:.72rem">@modelcontextprotocol/sdk ^1.10.1</code><br>
+          <code style="font-size:.72rem">express ^4.21.2</code><br>
+          <code style="font-size:.72rem">zod ^3.24.2</code>
+        </div>
+        <span class="tag">npm</span>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /arch -->
+
+<!-- TABLA RESUMEN DE ARCHIVOS -->
+<div style="margin-top:36px;">
+  <div class="layer-title" style="color:#64748b;font-size:.72rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px;">Inventario de Archivos</div>
+  <table>
+    <thead>
+      <tr><th>Archivo</th><th>Tipo</th><th>Responsabilidad</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>src/index.js</td><td>Servidor MCP stdio</td><td>Registro de herramientas MCP, transporte stdio</td></tr>
+      <tr><td>src/http-server.js</td><td>Servidor HTTP</td><td>Express app, API REST, auth, carrito, MCP/HTTP</td></tr>
+      <tr><td>src/data/productos.js</td><td>Datos</td><td>Catálogo de productos (100+ ítems, múltiples categorías)</td></tr>
+      <tr><td>src/data/clientes.js</td><td>Datos</td><td>Clientes y programa de fidelidad</td></tr>
+      <tr><td>src/data/ordenes.js</td><td>Datos</td><td>Historial de órdenes de compra</td></tr>
+      <tr><td>src/data/sucursales.js</td><td>Datos</td><td>Sucursales físicas</td></tr>
+      <tr><td>src/data/categorias.js</td><td>Datos</td><td>Árbol de categorías de productos</td></tr>
+      <tr><td>public/index.html</td><td>UI</td><td>Página principal (vitrina)</td></tr>
+      <tr><td>public/catalogo.html</td><td>UI</td><td>Catálogo de productos</td></tr>
+      <tr><td>public/panel.html</td><td>UI</td><td>Panel de administración / demo</td></tr>
+      <tr><td>railway.toml</td><td>Infra</td><td>Configuración de despliegue en Railway</td></tr>
+      <tr><td>package.json</td><td>Config</td><td>Scripts, dependencias, tipo ESM</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<footer>Generado el 03 mayo 2026 · ProyectoMCP v1.0.0</footer>
+
+</body>
+</html>
