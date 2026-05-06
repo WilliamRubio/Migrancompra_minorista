@@ -1,0 +1,116 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Categoria {
+  id        String     @id
+  nombre    String
+  padre     String?
+  productos Producto[]
+}
+
+model Producto {
+  id          String    @id
+  nombre      String
+  categoriaId String
+  precio      Int
+  stock       Int
+  unidad      String
+  proveedor   String
+  categoria   Categoria @relation(fields: [categoriaId], references: [id], onDelete: Restrict)
+  ordenItems  OrdenItem[]
+
+  @@index([categoriaId])
+  @@index([nombre])
+}
+
+model Cliente {
+  id               String  @id
+  nombre           String
+  email            String  @unique
+  telefono         String
+  ciudad           String
+  tarjetaFidelidad String
+  puntos           Int     @default(0)
+  ordenes          Orden[]
+
+  @@index([tarjetaFidelidad])
+  @@index([ciudad])
+}
+
+model Sucursal {
+  id        String  @id
+  nombre    String
+  ciudad    String
+  direccion String
+  tipo      String
+  empleados Int
+  horario   String
+  ordenes   Orden[]
+
+  @@index([ciudad])
+}
+
+model Usuario {
+  id               String   @id
+  nombre           String
+  email            String   @unique
+  passwordHash     String
+  tarjetaFidelidad String
+  puntos           Int      @default(0)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  sesiones         Sesion[]
+
+  @@index([tarjetaFidelidad])
+}
+
+model Sesion {
+  token     String   @id
+  userId    String
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+  usuario   Usuario  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model Orden {
+  id         String      @id
+  clienteId  String?
+  usuarioId  String?
+  sucursalId String?
+  fecha      DateTime
+  estado     String
+  total      Int
+  direccion  String?
+  metodoPago String?
+  cliente    Cliente?    @relation(fields: [clienteId], references: [id], onDelete: SetNull)
+  usuario    Usuario?    @relation(fields: [usuarioId], references: [id], onDelete: SetNull)
+  sucursal   Sucursal?   @relation(fields: [sucursalId], references: [id], onDelete: SetNull)
+  items      OrdenItem[]
+
+  @@index([clienteId])
+  @@index([usuarioId])
+  @@index([sucursalId])
+  @@index([estado])
+}
+
+model OrdenItem {
+  id            Int      @id @default(autoincrement())
+  ordenId       String
+  productoId    String
+  cantidad      Int
+  precioUnitario Int
+  orden         Orden    @relation(fields: [ordenId], references: [id], onDelete: Cascade)
+  producto      Producto @relation(fields: [productoId], references: [id], onDelete: Restrict)
+
+  @@index([ordenId])
+  @@index([productoId])
+}

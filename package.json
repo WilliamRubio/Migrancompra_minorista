@@ -7,15 +7,25 @@
   "scripts": {
     "start": "node src/http-server.js",
     "dev": "node --watch src/http-server.js",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:deploy": "prisma migrate deploy",
+    "db:seed": "prisma db seed",
+    "db:bootstrap": "prisma migrate deploy && prisma db seed",
     "mcp:stdio": "node src/index.js",
     "mcp:stdio:dev": "node --watch src/index.js"
+  },
+  "prisma": {
+    "seed": "node prisma/seed.mjs"
   },
   "engines": {
     "node": ">=20"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.10.1",
+    "@prisma/client": "^6.19.3",
     "express": "^4.21.2",
+    "prisma": "^6.19.3",
     "zod": "^3.24.2"
   }
 }

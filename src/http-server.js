@@ -5,12 +5,21 @@ import { scryptSync, randomBytes, timingSafeEqual } from "crypto";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { z } from "zod";
+import { prisma, isDbEnabled } from "./lib/db.js";
 
-import { productos } from "./data/productos.js";
-import { clientes } from "./data/clientes.js";
-import { sucursales } from "./data/sucursales.js";
-import { ordenes } from "./data/ordenes.js";
-import { categorias } from "./data/categorias.js";
+let productos = [];
+let clientes = [];
+let sucursales = [];
+let ordenes = [];
+let categorias = [];
+
+if (!isDbEnabled) {
+  ({ productos } = await import("./data/productos.js"));
+  ({ clientes } = await import("./data/clientes.js"));
+  ({ sucursales } = await import("./data/sucursales.js"));
+  ({ ordenes } = await import("./data/ordenes.js"));
+  ({ categorias } = await import("./data/categorias.js"));
+}
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -19,10 +28,41 @@ const app = express();
 const PORT = parseInt(process.env.PORT) || 3000;
 const IS_PROD = process.env.NODE_ENV === "production";
 
+if (IS_PROD && !isDbEnabled) {
+  throw new Error("DATABASE_URL es obligatoria en producción.");
+}
+
+const ALLOWED_CORS_ORIGINS = new Set([
+  "https://hoppscotch.io",
+  "https://app.hoppscotch.io",
+  "http://localhost:3000",
+  "http://127.0.0.1:3000",
+  "http://localhost:5173",
+  "http://127.0.0.1:5173",
+]);
+
 // Confiar en el proxy inverso de Railway/Render para HTTPS
 if (IS_PROD) app.set("trust proxy", 1);
 
 app.use(express.json());
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+
+  if (origin && (ALLOWED_CORS_ORIGINS.has(origin) || origin.startsWith("http://localhost:"))) {
+    res.set("Access-Control-Allow-Origin", origin);
+    res.set("Access-Control-Allow-Credentials", "true");
+  }
+
+  res.set("Vary", "Origin");
+  res.set("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS");
+  res.set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With");
+
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(204);
+  }
+
+  next();
+});
 app.use(express.static(path.join(__dirname, "../public"), { etag: false, lastModified: false }));
 app.use((req, res, next) => {
   res.set('Cache-Control', 'no-store');
@@ -55,6 +95,140 @@ function parseCookies(req) {
   return map;
 }
 
+function toPublicUser(user) {
+  const { passwordHash: _, ...pub } = user;
+  return pub;
+}
+
+async function findUserByEmail(emailLower) {
+  if (isDbEnabled) {
+    return prisma.usuario.findUnique({ where: { email: emailLower } });
+  }
+  return usuariosStore.find(u => u.email === emailLower) ?? null;
+}
+
+async function findUserById(id) {
+  if (isDbEnabled) {
+    return prisma.usuario.findUnique({ where: { id } });
+  }
+  return usuariosStore.find(u => u.id === id) ?? null;
+}
+
+async function createSessionForUser(userId) {
+  const token = randomBytes(32).toString("hex");
+  if (isDbEnabled) {
+    await prisma.sesion.create({
+      data: {
+        token,
+        userId,
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      },
+    });
+  } else {
+    sessions[token] = userId;
+  }
+  return token;
+}
+
+async function deleteSessionToken(token) {
+  if (!token) return;
+  if (isDbEnabled) {
+    await prisma.sesion.deleteMany({ where: { token } });
+  } else {
+    delete sessions[token];
+  }
+}
+
+async function getSession(req) {
+  const authHeader = req.headers.authorization || "";
+  const bearerToken = authHeader.toLowerCase().startsWith("bearer ")
+    ? authHeader.slice(7).trim()
+    : null;
+  const token = bearerToken || parseCookies(req)["mgc_session"];
+  if (!token) return null;
+
+  if (isDbEnabled) {
+    const session = await prisma.sesion.findUnique({
+      where: { token },
+      include: { usuario: true },
+    });
+    if (!session) return null;
+    if (session.expiresAt < new Date()) {
+      await deleteSessionToken(token);
+      return null;
+    }
+    return { token, user: session.usuario };
+  }
+
+  const userId = sessions[token];
+  if (!userId) return null;
+  return { token, user: usuariosStore.find(u => u.id === userId) };
+}
+
+async function getCategoriasData() {
+  if (isDbEnabled) {
+    return prisma.categoria.findMany();
+  }
+  return categorias;
+}
+
+async function getProductosData() {
+  if (isDbEnabled) {
+    return prisma.producto.findMany();
+  }
+  return productos;
+}
+
+async function getProductoById(id) {
+  if (isDbEnabled) {
+    return prisma.producto.findUnique({ where: { id } });
+  }
+  return productos.find(p => p.id === id) ?? null;
+}
+
+function mapDbOrden(orden) {
+  return {
+    id: orden.id,
+    clienteId: orden.clienteId,
+    sucursalId: orden.sucursalId,
+    fecha: orden.fecha.toISOString().slice(0, 10),
+    estado: orden.estado,
+    total: orden.total,
+    direccion: orden.direccion,
+    metodoPago: orden.metodoPago,
+    items: (orden.items || []).map((item) => ({
+      productoId: item.productoId,
+      cantidad: item.cantidad,
+      precioUnitario: item.precioUnitario,
+    })),
+  };
+}
+
+async function getClientesData() {
+  if (isDbEnabled) {
+    return prisma.cliente.findMany();
+  }
+  return clientes;
+}
+
+async function getSucursalesData() {
+  if (isDbEnabled) {
+    return prisma.sucursal.findMany();
+  }
+  return sucursales;
+}
+
+async function getOrdenesData() {
+  if (isDbEnabled) {
+    const data = await prisma.orden.findMany({
+      include: { items: true },
+      orderBy: { fecha: "desc" },
+    });
+    return data.map(mapDbOrden);
+  }
+  return ordenes;
+}
+
 // Almacenes en memoria (se reinician con el servidor)
 const sessions     = {};          // token → userId
 const carritos     = {};          // userId → [{ productoId, cantidad }]
@@ -67,17 +241,9 @@ const usuariosStore = [
   { id: "U002", nombre: "María López",   email: "maria@demo.com",  passwordHash: hashPassword("Demo1234"), tarjetaFidelidad: "SILVER",  puntos: 800  },
 ];
 
-function getSession(req) {
-  const token  = parseCookies(req)["mgc_session"];
-  if (!token) return null;
-  const userId = sessions[token];
-  if (!userId) return null;
-  return { token, user: usuariosStore.find(u => u.id === userId) };
-}
-
 // ─── AUTH: endpoints ──────────────────────────────────────────────────────────
 
-app.post("/api/auth/registro", (req, res) => {
+app.post("/api/auth/registro", async (req, res) => {
   const { nombre, email, password } = req.body || {};
   if (!nombre?.trim() || !email?.trim() || !password)
     return res.status(400).json({ error: "nombre, email y password son requeridos" });
@@ -87,69 +253,96 @@ app.post("/api/auth/registro", (req, res) => {
     return res.status(400).json({ error: "Email inválido" });
   if (password.length < 6)
     return res.status(400).json({ error: "La contraseña debe tener al menos 6 caracteres" });
-  if (usuariosStore.find(u => u.email === emailLower))
+  if (await findUserByEmail(emailLower))
     return res.status(409).json({ error: "Ya existe una cuenta con ese correo" });
 
-  nextUId++;
-  const user = {
-    id: `U${nextUId}`,
-    nombre: nombre.trim(),
-    email: emailLower,
-    passwordHash: hashPassword(password),
-    tarjetaFidelidad: "BRONZE",
-    puntos: 0,
-  };
-  usuariosStore.push(user);
+  let user;
+  if (isDbEnabled) {
+    user = await prisma.usuario.create({
+      data: {
+        id: `U${Date.now()}`,
+        nombre: nombre.trim(),
+        email: emailLower,
+        passwordHash: hashPassword(password),
+        tarjetaFidelidad: "BRONZE",
+        puntos: 0,
+      },
+    });
+  } else {
+    nextUId++;
+    user = {
+      id: `U${nextUId}`,
+      nombre: nombre.trim(),
+      email: emailLower,
+      passwordHash: hashPassword(password),
+      tarjetaFidelidad: "BRONZE",
+      puntos: 0,
+    };
+    usuariosStore.push(user);
+  }
 
-  const token = randomBytes(32).toString("hex");
-  sessions[token] = user.id;
+  const token = await createSessionForUser(user.id);
   res.cookie("mgc_session", token, { httpOnly: true, secure: IS_PROD, sameSite: "strict", maxAge: 7 * 24 * 60 * 60 * 1000 });
-  const { passwordHash: _, ...pub } = user;
-  res.status(201).json({ usuario: pub });
+  res.status(201).json({ usuario: toPublicUser(user), sessionToken: token });
 });
 
-app.post("/api/auth/login", (req, res) => {
+app.post("/api/auth/login", async (req, res) => {
   const { email, password } = req.body || {};
   if (!email || !password)
     return res.status(400).json({ error: "email y password son requeridos" });
 
-  const user = usuariosStore.find(u => u.email === email.toLowerCase().trim());
+  const user = await findUserByEmail(email.toLowerCase().trim());
   if (!user || !verifyPassword(password, user.passwordHash))
     return res.status(401).json({ error: "Credenciales incorrectas" });
 
-  const token = randomBytes(32).toString("hex");
-  sessions[token] = user.id;
+  const token = await createSessionForUser(user.id);
   res.cookie("mgc_session", token, { httpOnly: true, secure: IS_PROD, sameSite: "strict", maxAge: 7 * 24 * 60 * 60 * 1000 });
-  const { passwordHash: _, ...pub } = user;
-  res.json({ usuario: pub });
+  res.json({ usuario: toPublicUser(user), sessionToken: token });
 });
 
-app.post("/api/auth/logout", (req, res) => {
+app.post("/api/auth/logout", async (req, res) => {
   const token = parseCookies(req)["mgc_session"];
-  if (token) delete sessions[token];
+  await deleteSessionToken(token);
   res.clearCookie("mgc_session");
   res.json({ ok: true });
 });
 
-app.get("/api/auth/perfil", (req, res) => {
-  const session = getSession(req);
+app.get("/api/auth/perfil", async (req, res) => {
+  const session = await getSession(req);
   if (!session) return res.status(401).json({ error: "No autenticado" });
-  const { passwordHash: _, ...pub } = session.user;
-  res.json(pub);
+  const user = await findUserById(session.user.id);
+  if (!user) return res.status(401).json({ error: "No autenticado" });
+  res.json(toPublicUser(user));
 });
 
 // ─── CARRITO: endpoints ───────────────────────────────────────────────────────
 
-app.get("/api/carrito", (req, res) => {
-  const session = getSession(req);
+app.get("/api/carrito", async (req, res) => {
+  const session = await getSession(req);
   if (!session) return res.status(401).json({ error: "No autenticado" });
 
-  const items = (carritos[session.user.id] || []).map(item => {
-    const p = productos.find(x => x.id === item.productoId);
+  const cart = carritos[session.user.id] || [];
+  const productIds = cart.map(i => i.productoId);
+  const dbProducts = isDbEnabled
+    ? await prisma.producto.findMany({ where: { id: { in: productIds } }, include: { categoria: true } })
+    : [];
+
+  const items = cart.map(item => {
+    const p = isDbEnabled
+      ? dbProducts.find(x => x.id === item.productoId)
+      : productos.find(x => x.id === item.productoId);
     if (!p) return null;
-    const cat = categorias.find(c => c.id === p.categoriaId);
-    return { ...item, nombre: p.nombre, precio: p.precio, unidad: p.unidad,
-             stock: p.stock, categoria: cat?.nombre ?? p.categoriaId };
+    const categoriaNombre = isDbEnabled
+      ? p.categoria?.nombre ?? p.categoriaId
+      : categorias.find(c => c.id === p.categoriaId)?.nombre ?? p.categoriaId;
+    return {
+      ...item,
+      nombre: p.nombre,
+      precio: p.precio,
+      unidad: p.unidad,
+      stock: p.stock,
+      categoria: categoriaNombre,
+    };
   }).filter(Boolean);
 
   const total      = items.reduce((s, i) => s + i.precio * i.cantidad, 0);
@@ -157,14 +350,14 @@ app.get("/api/carrito", (req, res) => {
   res.json({ items, total, totalItems });
 });
 
-app.post("/api/carrito/agregar", (req, res) => {
-  const session = getSession(req);
+app.post("/api/carrito/agregar", async (req, res) => {
+  const session = await getSession(req);
   if (!session) return res.status(401).json({ error: "No autenticado" });
 
   const { productoId, cantidad = 1 } = req.body || {};
   if (!productoId) return res.status(400).json({ error: "productoId requerido" });
 
-  const producto = productos.find(p => p.id === productoId.toUpperCase());
+  const producto = await getProductoById(productoId.toUpperCase());
   if (!producto) return res.status(404).json({ error: "Producto no encontrado" });
 
   const qty  = Math.max(1, parseInt(cantidad) || 1);
@@ -180,8 +373,8 @@ app.post("/api/carrito/agregar", (req, res) => {
   res.json({ ok: true, totalItems: cart.reduce((s, i) => s + i.cantidad, 0) });
 });
 
-app.put("/api/carrito/item/:productoId", (req, res) => {
-  const session = getSession(req);
+app.put("/api/carrito/item/:productoId", async (req, res) => {
+  const session = await getSession(req);
   if (!session) return res.status(401).json({ error: "No autenticado" });
 
   const pid  = req.params.productoId.toUpperCase();
@@ -198,8 +391,8 @@ app.put("/api/carrito/item/:productoId", (req, res) => {
   res.json({ ok: true });
 });
 
-app.delete("/api/carrito/item/:productoId", (req, res) => {
-  const session = getSession(req);
+app.delete("/api/carrito/item/:productoId", async (req, res) => {
+  const session = await getSession(req);
   if (!session) return res.status(401).json({ error: "No autenticado" });
 
   const pid = req.params.productoId.toUpperCase();
@@ -207,15 +400,15 @@ app.delete("/api/carrito/item/:productoId", (req, res) => {
   res.json({ ok: true });
 });
 
-app.delete("/api/carrito", (req, res) => {
-  const session = getSession(req);
+app.delete("/api/carrito", async (req, res) => {
+  const session = await getSession(req);
   if (!session) return res.status(401).json({ error: "No autenticado" });
   carritos[session.user.id] = [];
   res.json({ ok: true });
 });
 
-app.post("/api/carrito/checkout", (req, res) => {
-  const session = getSession(req);
+app.post("/api/carrito/checkout", async (req, res) => {
+  const session = await getSession(req);
   if (!session) return res.status(401).json({ error: "No autenticado" });
 
   const { direccion, metodoPago = "tarjeta" } = req.body || {};
@@ -224,33 +417,86 @@ app.post("/api/carrito/checkout", (req, res) => {
   const cart = carritos[session.user.id] || [];
   if (!cart.length) return res.status(400).json({ error: "El carrito está vacío" });
 
-  const items = cart.map(item => {
-    const p = productos.find(x => x.id === item.productoId);
+  const items = await Promise.all(cart.map(async item => {
+    const p = await getProductoById(item.productoId);
     if (!p) return null;
     return { productoId: item.productoId, nombre: p.nombre,
              cantidad: item.cantidad, precioUnit: p.precio, subtotal: p.precio * item.cantidad };
-  }).filter(Boolean);
+  }));
 
-  const total = items.reduce((s, i) => s + i.subtotal, 0);
-  const orden = {
-    id:             `ORD-${Date.now()}`,
-    clienteId:      session.user.id,
-    clienteNombre:  session.user.nombre,
-    items,
-    total,
-    direccion:      direccion.trim(),
-    metodoPago,
-    estado:         "pendiente",
-    fecha:          new Date().toISOString(),
-  };
+  const filteredItems = items.filter(Boolean);
 
-  ordenesStore.push(orden);
+  const total = filteredItems.reduce((s, i) => s + i.subtotal, 0);
+  const ordenId = `ORD-${Date.now()}`;
+
+  let orden;
+  if (isDbEnabled) {
+    await prisma.$transaction(async (tx) => {
+      await tx.orden.create({
+        data: {
+          id: ordenId,
+          usuarioId: session.user.id,
+          fecha: new Date(),
+          estado: "pendiente",
+          total,
+          direccion: direccion.trim(),
+          metodoPago,
+        },
+      });
+
+      await tx.ordenItem.createMany({
+        data: filteredItems.map((item) => ({
+          ordenId,
+          productoId: item.productoId,
+          cantidad: item.cantidad,
+          precioUnitario: item.precioUnit,
+        })),
+      });
+    });
+
+    orden = {
+      id: ordenId,
+      clienteId: session.user.id,
+      clienteNombre: session.user.nombre,
+      items: filteredItems,
+      total,
+      direccion: direccion.trim(),
+      metodoPago,
+      estado: "pendiente",
+      fecha: new Date().toISOString(),
+    };
+  } else {
+    orden = {
+      id: ordenId,
+      clienteId: session.user.id,
+      clienteNombre: session.user.nombre,
+      items: filteredItems,
+      total,
+      direccion: direccion.trim(),
+      metodoPago,
+      estado: "pendiente",
+      fecha: new Date().toISOString(),
+    };
+    ordenesStore.push(orden);
+  }
+
   carritos[session.user.id] = [];
 
   const puntosGanados = Math.floor(total / 1000);
-  session.user.puntos += puntosGanados;
+  if (isDbEnabled) {
+    await prisma.usuario.update({
+      where: { id: session.user.id },
+      data: { puntos: { increment: puntosGanados } },
+    });
+  } else {
+    session.user.puntos += puntosGanados;
+  }
 
-  res.status(201).json({ orden, puntosGanados, totalPuntos: session.user.puntos });
+  const totalPuntos = isDbEnabled
+    ? (await findUserById(session.user.id))?.puntos ?? session.user.puntos
+    : session.user.puntos;
+
+  res.status(201).json({ orden, puntosGanados, totalPuntos });
 });
 
 // ─── IMAGEN ESPECÍFICA POR PRODUCTO ──────────────────────────────────────────
@@ -420,19 +666,26 @@ function enriquecerProducto(p) {
   return { ...p, categoria: cat?.nombre ?? p.categoriaId };
 }
 
+function enriquecerProductoConCategorias(p, categoriasData) {
+  const cat = categoriasData.find((c) => c.id === p.categoriaId);
+  return { ...p, categoria: cat?.nombre ?? p.categoriaId };
+}
+
 // ─── CATEGORÍAS ───────────────────────────────────────────────────────────────
 
-app.get("/api/categorias", (req, res) => {
-  res.json(categorias);
+app.get("/api/categorias", async (req, res) => {
+  res.json(await getCategoriasData());
 });
 
-app.get("/api/categorias/:id", (req, res) => {
-  const cat = categorias.find((c) => c.id === req.params.id.toUpperCase());
+app.get("/api/categorias/:id", async (req, res) => {
+  const categoriasData = await getCategoriasData();
+  const productosData = await getProductosData();
+  const cat = categoriasData.find((c) => c.id === req.params.id.toUpperCase());
   if (!cat)
     return res.status(404).json({ error: `Categoría "${req.params.id}" no encontrada` });
-  const productosDeCategoria = productos
+  const productosDeCategoria = productosData
     .filter((p) => p.categoriaId === cat.id)
-    .map(enriquecerProducto);
+    .map((p) => enriquecerProductoConCategorias(p, categoriasData));
   res.json({ ...cat, productos: productosDeCategoria });
 });
 
@@ -443,11 +696,13 @@ app.get("/api/categorias/:id", (req, res) => {
 //   ?stock_min=N    filtra por stock mínimo disponible
 //   ?ordenar=precio_asc|precio_desc|nombre_asc|nombre_desc|stock_asc|stock_desc
 //   ?incluir_sub=true  incluye productos de subcategorías cuando el id es padre
-app.get("/api/productos/categoria/:id", (req, res) => {
+app.get("/api/productos/categoria/:id", async (req, res) => {
   const id = req.params.id.toUpperCase();
+  const categoriasData = await getCategoriasData();
+  const productosData = await getProductosData();
 
   // Validar que la categoría existe
-  const cat = categorias.find((c) => c.id === id);
+  const cat = categoriasData.find((c) => c.id === id);
   if (!cat)
     return res.status(404).json({ error: `Categoría "${id}" no encontrada` });
 
@@ -455,7 +710,7 @@ app.get("/api/productos/categoria/:id", (req, res) => {
   const incluirSub = req.query.incluir_sub === "true";
   const idsAFiltrar = [id];
   if (incluirSub) {
-    categorias
+    categoriasData
       .filter((c) => c.padre === id)
       .forEach((c) => idsAFiltrar.push(c.id));
   }
@@ -465,12 +720,12 @@ app.get("/api/productos/categoria/:id", (req, res) => {
   const precioMax = req.query.precio_max !== undefined ? parseFloat(req.query.precio_max) : null;
   const stockMin  = req.query.stock_min  !== undefined ? parseInt(req.query.stock_min)   : null;
 
-  let resultado = productos
+  let resultado = productosData
     .filter((p) => idsAFiltrar.includes(p.categoriaId))
     .filter((p) => precioMin === null || p.precio >= precioMin)
     .filter((p) => precioMax === null || p.precio <= precioMax)
     .filter((p) => stockMin  === null || p.stock  >= stockMin)
-    .map(enriquecerProducto);
+    .map((p) => enriquecerProductoConCategorias(p, categoriasData));
 
   // Ordenamiento
   const ordenar = req.query.ordenar ?? "nombre_asc";
@@ -500,59 +755,68 @@ app.get("/api/productos/categoria/:id", (req, res) => {
 
 // ─── PRODUCTOS ────────────────────────────────────────────────────────────────
 
-app.get("/api/productos", (req, res) => {
-  res.json(productos.map(enriquecerProducto));
+app.get("/api/productos", async (req, res) => {
+  const categoriasData = await getCategoriasData();
+  const productosData = await getProductosData();
+  res.json(productosData.map((p) => enriquecerProductoConCategorias(p, categoriasData)));
 });
 
-app.get("/api/productos/buscar", (req, res) => {
+app.get("/api/productos/buscar", async (req, res) => {
   const { termino } = req.query;
   if (!termino) return res.status(400).json({ error: 'Parámetro "termino" requerido' });
+  const categoriasData = await getCategoriasData();
+  const productosData = await getProductosData();
   const t = termino.toLowerCase();
-  const resultado = productos
+  const resultado = productosData
     .filter((p) => {
-      const cat = categorias.find((c) => c.id === p.categoriaId);
+      const cat = categoriasData.find((c) => c.id === p.categoriaId);
       return (
         p.nombre.toLowerCase().includes(t) ||
         (cat?.nombre ?? "").toLowerCase().includes(t) ||
         p.proveedor.toLowerCase().includes(t)
       );
     })
-    .map(enriquecerProducto);
+    .map((p) => enriquecerProductoConCategorias(p, categoriasData));
   res.json(resultado);
 });
 
-app.get("/api/productos/bajo-stock", (req, res) => {
+app.get("/api/productos/bajo-stock", async (req, res) => {
   const umbral = parseInt(req.query.umbral) || 100;
-  const resultado = productos
+  const categoriasData = await getCategoriasData();
+  const productosData = await getProductosData();
+  const resultado = productosData
     .filter((p) => p.stock < umbral)
     .sort((a, b) => a.stock - b.stock)
-    .map(enriquecerProducto);
+    .map((p) => enriquecerProductoConCategorias(p, categoriasData));
   res.json(resultado);
 });
 
-app.get("/api/productos/:id", (req, res) => {
-  const producto = productos.find((p) => p.id === req.params.id.toUpperCase());
+app.get("/api/productos/:id", async (req, res) => {
+  const categoriasData = await getCategoriasData();
+  const producto = await getProductoById(req.params.id.toUpperCase());
   if (!producto)
     return res.status(404).json({ error: `Producto "${req.params.id}" no encontrado` });
-  res.json(enriquecerProducto(producto));
+  res.json(enriquecerProductoConCategorias(producto, categoriasData));
 });
 
 // ─── CLIENTES ─────────────────────────────────────────────────────────────────
 
-app.get("/api/clientes", (req, res) => {
-  res.json(clientes);
+app.get("/api/clientes", async (req, res) => {
+  res.json(await getClientesData());
 });
 
-app.get("/api/clientes/categoria/:nivel", (req, res) => {
+app.get("/api/clientes/categoria/:nivel", async (req, res) => {
   const nivel = req.params.nivel.toUpperCase();
   if (!["GOLD", "SILVER", "BRONZE"].includes(nivel))
     return res.status(400).json({ error: "Nivel debe ser GOLD, SILVER o BRONZE" });
-  const resultado = clientes.filter((c) => c.tarjetaFidelidad === nivel);
+  const clientesData = await getClientesData();
+  const resultado = clientesData.filter((c) => c.tarjetaFidelidad === nivel);
   res.json(resultado);
 });
 
-app.get("/api/clientes/:id", (req, res) => {
-  const cliente = clientes.find((c) => c.id === req.params.id.toUpperCase());
+app.get("/api/clientes/:id", async (req, res) => {
+  const clientesData = await getClientesData();
+  const cliente = clientesData.find((c) => c.id === req.params.id.toUpperCase());
   if (!cliente)
     return res.status(404).json({ error: `Cliente "${req.params.id}" no encontrado` });
   res.json(cliente);
@@ -560,12 +824,13 @@ app.get("/api/clientes/:id", (req, res) => {
 
 // ─── SUCURSALES ───────────────────────────────────────────────────────────────
 
-app.get("/api/sucursales", (req, res) => {
-  res.json(sucursales);
+app.get("/api/sucursales", async (req, res) => {
+  res.json(await getSucursalesData());
 });
 
-app.get("/api/sucursales/ciudad/:ciudad", (req, res) => {
-  const resultado = sucursales.filter((s) =>
+app.get("/api/sucursales/ciudad/:ciudad", async (req, res) => {
+  const sucursalesData = await getSucursalesData();
+  const resultado = sucursalesData.filter((s) =>
     s.ciudad.toLowerCase().includes(req.params.ciudad.toLowerCase())
   );
   res.json(resultado);
@@ -573,52 +838,64 @@ app.get("/api/sucursales/ciudad/:ciudad", (req, res) => {
 
 // ─── ÓRDENES ──────────────────────────────────────────────────────────────────
 
-app.get("/api/ordenes", (req, res) => {
-  res.json(ordenes);
+app.get("/api/ordenes", async (req, res) => {
+  res.json(await getOrdenesData());
 });
 
-app.get("/api/ordenes/cliente/:clienteId", (req, res) => {
-  const resultado = ordenes.filter(
+app.get("/api/ordenes/cliente/:clienteId", async (req, res) => {
+  const ordenesData = await getOrdenesData();
+  const resultado = ordenesData.filter(
     (o) => o.clienteId === req.params.clienteId.toUpperCase()
   );
   res.json(resultado);
 });
 
-app.get("/api/ordenes/estado/:estado", (req, res) => {
+app.get("/api/ordenes/estado/:estado", async (req, res) => {
   const estados = ["pendiente", "en_proceso", "entregado", "cancelado"];
   if (!estados.includes(req.params.estado))
     return res.status(400).json({ error: "Estado inválido" });
-  const resultado = ordenes.filter((o) => o.estado === req.params.estado);
+  const ordenesData = await getOrdenesData();
+  const resultado = ordenesData.filter((o) => o.estado === req.params.estado);
   res.json(resultado);
 });
 
 // ─── RESUMEN ──────────────────────────────────────────────────────────────────
 
-app.get("/api/resumen", (req, res) => {
-  const totalVentas = ordenes
+app.get("/api/resumen", async (req, res) => {
+  const [ordenesData, productosData, clientesData, sucursalesData] = await Promise.all([
+    getOrdenesData(),
+    getProductosData(),
+    getClientesData(),
+    getSucursalesData(),
+  ]);
+
+  const totalVentas = ordenesData
     .filter((o) => o.estado === "entregado")
     .reduce((sum, o) => sum + o.total, 0);
 
   const conteo = {};
-  ordenes.forEach((o) =>
+  ordenesData.forEach((o) =>
     o.items.forEach((i) => {
       conteo[i.productoId] = (conteo[i.productoId] || 0) + i.cantidad;
     })
   );
-  const topId = Object.entries(conteo).sort((a, b) => b[1] - a[1])[0][0];
-  const productoMasVendido = productos.find((p) => p.id === topId);
-  const clienteTopPuntos = clientes.slice().sort((a, b) => b.puntos - a.puntos)[0];
+  const topEntry = Object.entries(conteo).sort((a, b) => b[1] - a[1])[0];
+  const topId = topEntry?.[0];
+  const productoMasVendido = productosData.find((p) => p.id === topId);
+  const clienteTopPuntos = clientesData.slice().sort((a, b) => b.puntos - a.puntos)[0];
 
   res.json({
-    totalProductos: productos.length,
-    totalClientes: clientes.length,
-    totalSucursales: sucursales.length,
-    totalOrdenes: ordenes.length,
-    ventasEntregadas: ordenes.filter((o) => o.estado === "entregado").length,
+    totalProductos: productosData.length,
+    totalClientes: clientesData.length,
+    totalSucursales: sucursalesData.length,
+    totalOrdenes: ordenesData.length,
+    ventasEntregadas: ordenesData.filter((o) => o.estado === "entregado").length,
     totalIngresosEntregados: `$${totalVentas.toLocaleString("es-CO")} COP`,
     productoMasVendido: productoMasVendido?.nombre,
-    clienteConMasPuntos: `${clienteTopPuntos.nombre} (${clienteTopPuntos.puntos} puntos)`,
-    productosConStockCritico: productos.filter((p) => p.stock < 100).length,
+    clienteConMasPuntos: clienteTopPuntos
+      ? `${clienteTopPuntos.nombre} (${clienteTopPuntos.puntos} puntos)`
+      : null,
+    productosConStockCritico: productosData.filter((p) => p.stock < 100).length,
   });
 });
 
@@ -632,18 +909,26 @@ function crearMcpServer() {
   });
 
   mcpServer.tool("listar_productos", "Lista todos los productos del catálogo", {}, async () => ({
-    content: [{ type: "text", text: JSON.stringify(productos, null, 2) }],
+    content: [{ type: "text", text: JSON.stringify(await getProductosData(), null, 2) }],
   }));
 
   mcpServer.tool("buscar_producto", "Busca productos por nombre o categoría",
     { termino: z.string().describe("Nombre o categoría a buscar") },
     async ({ termino }) => {
       const t = termino.toLowerCase();
-      const resultado = productos.filter(p =>
-        p.nombre.toLowerCase().includes(t) ||
-        p.categoriaId?.toLowerCase().includes(t) ||
-        p.proveedor.toLowerCase().includes(t)
-      );
+      const [productosData, categoriasData] = await Promise.all([
+        getProductosData(),
+        getCategoriasData(),
+      ]);
+      const resultado = productosData.filter((p) => {
+        const categoria = categoriasData.find((c) => c.id === p.categoriaId);
+        return (
+          p.nombre.toLowerCase().includes(t) ||
+          p.categoriaId?.toLowerCase().includes(t) ||
+          (categoria?.nombre || "").toLowerCase().includes(t) ||
+          p.proveedor.toLowerCase().includes(t)
+        );
+      });
       return { content: [{ type: "text", text: resultado.length
         ? JSON.stringify(resultado, null, 2)
         : `No se encontraron productos con el término "${termino}"` }] };
@@ -653,9 +938,10 @@ function crearMcpServer() {
   mcpServer.tool("obtener_producto", "Obtiene el detalle de un producto por su ID",
     { id: z.string().describe("ID del producto (ej: P001)") },
     async ({ id }) => {
-      const producto = productos.find(p => p.id === id.toUpperCase());
+      const categoriasData = await getCategoriasData();
+      const producto = await getProductoById(id.toUpperCase());
       return { content: [{ type: "text", text: producto
-        ? JSON.stringify(enriquecerProducto(producto), null, 2)
+        ? JSON.stringify(enriquecerProductoConCategorias(producto, categoriasData), null, 2)
         : `Producto con ID "${id}" no encontrado` }] };
     }
   );
@@ -663,7 +949,8 @@ function crearMcpServer() {
   mcpServer.tool("productos_bajo_stock", "Lista los productos con stock por debajo de un umbral",
     { umbral: z.number().int().min(1).describe("Cantidad mínima de stock (ej: 100)") },
     async ({ umbral }) => {
-      const resultado = productos.filter(p => p.stock < umbral).sort((a, b) => a.stock - b.stock);
+      const productosData = await getProductosData();
+      const resultado = productosData.filter(p => p.stock < umbral).sort((a, b) => a.stock - b.stock);
       return { content: [{ type: "text", text: resultado.length
         ? JSON.stringify(resultado, null, 2)
         : `Todos los productos tienen stock mayor a ${umbral}` }] };
@@ -671,13 +958,14 @@ function crearMcpServer() {
   );
 
   mcpServer.tool("listar_clientes", "Lista todos los clientes registrados", {}, async () => ({
-    content: [{ type: "text", text: JSON.stringify(clientes, null, 2) }],
+    content: [{ type: "text", text: JSON.stringify(await getClientesData(), null, 2) }],
   }));
 
   mcpServer.tool("obtener_cliente", "Obtiene el detalle de un cliente por su ID",
     { id: z.string().describe("ID del cliente (ej: C001)") },
     async ({ id }) => {
-      const cliente = clientes.find(c => c.id === id.toUpperCase());
+      const clientesData = await getClientesData();
+      const cliente = clientesData.find(c => c.id === id.toUpperCase());
       return { content: [{ type: "text", text: cliente
         ? JSON.stringify(cliente, null, 2)
         : `Cliente con ID "${id}" no encontrado` }] };
@@ -687,19 +975,21 @@ function crearMcpServer() {
   mcpServer.tool("clientes_por_categoria", "Lista los clientes según su nivel de tarjeta de fidelidad",
     { nivel: z.enum(["GOLD", "SILVER", "BRONZE"]).describe("Nivel de tarjeta: GOLD, SILVER o BRONZE") },
     async ({ nivel }) => {
-      const resultado = clientes.filter(c => c.tarjetaFidelidad === nivel);
+      const clientesData = await getClientesData();
+      const resultado = clientesData.filter(c => c.tarjetaFidelidad === nivel);
       return { content: [{ type: "text", text: JSON.stringify(resultado, null, 2) }] };
     }
   );
 
   mcpServer.tool("listar_sucursales", "Lista todas las sucursales de la empresa", {}, async () => ({
-    content: [{ type: "text", text: JSON.stringify(sucursales, null, 2) }],
+    content: [{ type: "text", text: JSON.stringify(await getSucursalesData(), null, 2) }],
   }));
 
   mcpServer.tool("sucursales_por_ciudad", "Lista las sucursales de una ciudad específica",
     { ciudad: z.string().describe("Nombre de la ciudad (ej: Bogotá, Medellín)") },
     async ({ ciudad }) => {
-      const resultado = sucursales.filter(s => s.ciudad.toLowerCase().includes(ciudad.toLowerCase()));
+      const sucursalesData = await getSucursalesData();
+      const resultado = sucursalesData.filter(s => s.ciudad.toLowerCase().includes(ciudad.toLowerCase()));
       return { content: [{ type: "text", text: resultado.length
         ? JSON.stringify(resultado, null, 2)
         : `No hay sucursales en "${ciudad}"` }] };
@@ -707,13 +997,14 @@ function crearMcpServer() {
   );
 
   mcpServer.tool("listar_ordenes", "Lista todas las órdenes de compra", {}, async () => ({
-    content: [{ type: "text", text: JSON.stringify(ordenes, null, 2) }],
+    content: [{ type: "text", text: JSON.stringify(await getOrdenesData(), null, 2) }],
   }));
 
   mcpServer.tool("ordenes_por_cliente", "Lista las órdenes de un cliente específico",
     { clienteId: z.string().describe("ID del cliente (ej: C001)") },
     async ({ clienteId }) => {
-      const resultado = ordenes.filter(o => o.clienteId === clienteId.toUpperCase());
+      const ordenesData = await getOrdenesData();
+      const resultado = ordenesData.filter(o => o.clienteId === clienteId.toUpperCase());
       return { content: [{ type: "text", text: resultado.length
         ? JSON.stringify(resultado, null, 2)
         : `No se encontraron órdenes para el cliente "${clienteId}"` }] };
@@ -723,7 +1014,8 @@ function crearMcpServer() {
   mcpServer.tool("ordenes_por_estado", "Lista las órdenes filtradas por estado",
     { estado: z.enum(["pendiente", "en_proceso", "entregado", "cancelado"]).describe("Estado de la orden") },
     async ({ estado }) => {
-      const resultado = ordenes.filter(o => o.estado === estado);
+      const ordenesData = await getOrdenesData();
+      const resultado = ordenesData.filter(o => o.estado === estado);
       return { content: [{ type: "text", text: resultado.length
         ? JSON.stringify(resultado, null, 2)
         : `No hay órdenes con estado "${estado}"` }] };
@@ -731,25 +1023,35 @@ function crearMcpServer() {
   );
 
   mcpServer.tool("listar_categorias", "Lista todas las categorías de productos", {}, async () => ({
-    content: [{ type: "text", text: JSON.stringify(categorias, null, 2) }],
+    content: [{ type: "text", text: JSON.stringify(await getCategoriasData(), null, 2) }],
   }));
 
   mcpServer.tool("resumen_negocio", "Muestra un resumen general del estado del negocio", {},
     async () => {
-      const totalVentas = ordenes.filter(o => o.estado === "entregado").reduce((s, o) => s + o.total, 0);
+      const [ordenesData, productosData, clientesData, sucursalesData] = await Promise.all([
+        getOrdenesData(),
+        getProductosData(),
+        getClientesData(),
+        getSucursalesData(),
+      ]);
+
+      const totalVentas = ordenesData.filter(o => o.estado === "entregado").reduce((s, o) => s + o.total, 0);
       const conteo = {};
-      ordenes.forEach(o => o.items.forEach(i => { conteo[i.productoId] = (conteo[i.productoId] || 0) + i.cantidad; }));
-      const topId = Object.entries(conteo).sort((a, b) => b[1] - a[1])[0][0];
-      const productoMasVendido = productos.find(p => p.id === topId);
-      const clienteTopPuntos = clientes.slice().sort((a, b) => b.puntos - a.puntos)[0];
+      ordenesData.forEach(o => o.items.forEach(i => { conteo[i.productoId] = (conteo[i.productoId] || 0) + i.cantidad; }));
+      const topEntry = Object.entries(conteo).sort((a, b) => b[1] - a[1])[0];
+      const topId = topEntry?.[0];
+      const productoMasVendido = productosData.find(p => p.id === topId);
+      const clienteTopPuntos = clientesData.slice().sort((a, b) => b.puntos - a.puntos)[0];
       return { content: [{ type: "text", text: JSON.stringify({
-        totalProductos: productos.length, totalClientes: clientes.length,
-        totalSucursales: sucursales.length, totalOrdenes: ordenes.length,
-        ventasEntregadas: ordenes.filter(o => o.estado === "entregado").length,
+        totalProductos: productosData.length, totalClientes: clientesData.length,
+        totalSucursales: sucursalesData.length, totalOrdenes: ordenesData.length,
+        ventasEntregadas: ordenesData.filter(o => o.estado === "entregado").length,
         totalIngresosEntregados: `$${totalVentas.toLocaleString("es-CO")} COP`,
         productoMasVendido: productoMasVendido?.nombre,
-        clienteConMasPuntos: `${clienteTopPuntos.nombre} (${clienteTopPuntos.puntos} puntos)`,
-        productosConStockCritico: productos.filter(p => p.stock < 100).length,
+        clienteConMasPuntos: clienteTopPuntos
+          ? `${clienteTopPuntos.nombre} (${clienteTopPuntos.puntos} puntos)`
+          : null,
+        productosConStockCritico: productosData.filter(p => p.stock < 100).length,
       }, null, 2) }] };
     }
   );

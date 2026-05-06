@@ -2,7 +2,7 @@
 builder = "nixpacks"
 
 [deploy]
-startCommand = "node src/http-server.js"
+startCommand = "npx prisma migrate deploy; npx prisma db seed; node src/http-server.js"
 restartPolicyType = "on_failure"
 restartPolicyMaxRetries = 3
 
